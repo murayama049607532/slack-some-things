@@ -9,6 +9,16 @@ Slack Some-Thingsは、カスタマイズ可能なチャンネル収集を行う
 
 コードレビューしてくれると............うれしい！！！！！！！！
 
+## 環境変数設定
+.env ファイルを用意し、SlackApp用トークンを環境変数として設定してください。
+```
+SLACK_APP_TOKEN=xapp-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+SLACK_BOT_TOKEN=xoxb-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+SLACK_USER_TOKEN=xoxp-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+SLACK_BOT_ID=B0543KRS57X
+```
+
 ## 機能
 
 ### channels list folder
