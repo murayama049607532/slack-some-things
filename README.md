@@ -14,7 +14,7 @@ Slack Some-Thingsは、カスタマイズ可能なチャンネル収集を行う
 ### channels list folder
 
 channel list folder は、フォルダ毎に収集すべき対象を保存する構造体であり、メンバとして ch_list(Vec) と、ボットによるメッセージを収集するかを定める bot(bool) を持ち、ch_list_folder.json として保存されます。 \
-また、フォルダはそれぞれタグと呼ばれる名前を持ち、各フォルダはこれによって区別されます。 \
+また、フォルダはそれぞれタグと呼ばれる名前を持ち、各フォルダはこれによって区別されます。 
 
 channel list folder に関連するコマンドとして、add、retrieve_bot、ch_list、tag_list が存在します。
 
