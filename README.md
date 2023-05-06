@@ -1,4 +1,4 @@
-# Slack Some-Things（内部向け）
+# Slack Some-Things
 
 ## 概要
 
