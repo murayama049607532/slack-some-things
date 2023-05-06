@@ -60,7 +60,9 @@ Channel Bugyo は自身より発せられたメッセージを無視しますが
 存在するタグを羅列します。
 
 `/channel_bugyo tag_list`
-###dist channel
+
+### dist channel
+
 dist channel は収集したメッセージを集積する目的地と収集対象のタグのリストを持つ構造体であり、ch_dists.json として保存されます。 \
 dist channel にメッセージを収集するには、チャンネルに Channel Bugyo が追加されている必要があるほか、set コマンドによる設定が必要です。
 
