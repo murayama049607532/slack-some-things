@@ -116,7 +116,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_and_add_channel_list() {
-        let test_ch = SlackChannelId::new("C04QCDSR8UV".to_string());
+        let test_ch = SlackChannelId::new("C01234567".to_string());
         add_channel_list("poi", test_ch.clone()).await.unwrap();
 
         let channel_folder = load_ch_list_folders_json().await.unwrap();

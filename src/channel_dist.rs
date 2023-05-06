@@ -69,7 +69,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_dists() {
-        let test_ch = SlackChannelId::new("C04QCDSR8UV".to_string());
+        let test_ch = SlackChannelId::new("C012345678".to_string());
         add_dists_json(test_ch.clone(), "poi").await.unwrap();
 
         let dists = load_ch_dists_json().await.unwrap();
