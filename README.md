@@ -2,7 +2,7 @@
 
 ## 概要
 
-Slack Some-Thingsは、カスタマイズ可能なチャンネル収集を行うためのSlack用アプリケーションです。Channel Bugyo が追加されているチャンネル内で、以下に説明されている設定を行うことで使用可能になります。
+Slack Some-Thingsは、カスタマイズ可能なチャンネル収集を行うためのSlack用アプリケーションです。Channel Bugyo が追加されているチャンネル内で、以下に説明されている設定を行うことで使用可能になります。 \
 現在はプレビュー版であり、基本的にローカルで動いているため、場合によっては反応しない場合があります。
 
 コードレビューしてくれると............うれしい！！！！！！！！
@@ -18,7 +18,7 @@ channel list folder に関連するコマンドとして、add、retrieve_bot、
 
 #### add
 
-指定したタグの channel list folder にチャンネルを追加します。
+指定したタグの channel list folder にチャンネルを追加します。削除機能は実装予定です。
 
 `/channel_bugyo add [tag] [#channel_1] [#channel_2] [#channel_3] ...`
 
