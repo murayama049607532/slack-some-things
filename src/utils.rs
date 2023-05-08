@@ -49,3 +49,27 @@ pub fn channel_preprocess(channel: &str) -> anyhow::Result<SlackChannelId> {
         .map_or("", |caps| caps.get(1).map_or("", |s| s.as_str()));
     Ok(SlackChannelId(channel_id_str.to_string()))
 }
+
+pub fn channel_id_to_channel_name(channel_id: &SlackChannelId) -> String {
+    let raw_channel_id = &channel_id.0;
+    let channel_name = format!("<#{raw_channel_id}>");
+    channel_name
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn channel_preprocess_test() {
+        let slack_channel = "<#test_channel|https://xxxxxxxxxxxxxxxx>";
+        let processed = channel_preprocess(slack_channel).unwrap();
+        assert_eq!("test_channel", processed.0);
+    }
+    #[tokio::test]
+    async fn channel_id_to_channel_name_test() {
+        let slack_channel = SlackChannelId::new("C12345678".to_string());
+        let processed = channel_id_to_channel_name(&slack_channel);
+        assert_eq!("<#C12345678>", processed);
+    }
+}

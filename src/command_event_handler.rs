@@ -54,6 +54,22 @@ pub async fn command_event_handler(
             let add_text = format!("タグ {tag} に {channels:#?} が追加されました");
             send_message(add_text).await?;
         }
+        "delete" => {
+            let tag = args_iter.next().context("error")?;
+            let channels = args_iter.clone().collect::<Vec<_>>();
+            let channel_stream = futures::stream::iter(args_iter);
+            channel_stream
+                .for_each(|channel| async {
+                    let channel_id =
+                        utils::channel_preprocess(channel).unwrap_or(SlackChannelId(String::new()));
+                    channel_list_folder::delete_channel_list(tag, channel_id)
+                        .await
+                        .unwrap_or(());
+                })
+                .await;
+            let delete_text = format!("タグ {tag} から {channels:#?} が削除されました");
+            send_message(delete_text).await?;
+        }
         "set" => {
             let tags_stream = futures::stream::iter(args_iter.clone());
             let tags = args_iter.clone().collect::<Vec<_>>();
@@ -88,8 +104,13 @@ pub async fn command_event_handler(
         }
         "ch_list" => {
             let tag = args_iter.next().context("argument error")?;
-            let ch_list = channel_list_folder::get_channel_list(tag).await?;
-            let ch_list_message = format!("タグに登録されたチャンネルは以下です。 {ch_list:#?}");
+            let ch_id_list = channel_list_folder::get_channel_list(tag).await?;
+            let ch_name_list = ch_id_list
+                .iter()
+                .map(utils::channel_id_to_channel_name)
+                .collect::<Vec<_>>();
+            let ch_list_message =
+                format!("タグに登録されたチャンネルは以下です。 {ch_name_list:#?}");
             send_message(ch_list_message).await?;
         }
         _ => {

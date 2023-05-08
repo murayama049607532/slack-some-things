@@ -8,7 +8,7 @@ features:
     always_online: false
   slash_commands:
     - command: /channel_bugyo
-      description: retrieve messages for entried channels.
+      description: retrieve messages from entried channels.
       usage_hint: "add [tag] [channel1] [channel2]... | set [tag1] [tag2]... "
       should_escape: true
 oauth_config:

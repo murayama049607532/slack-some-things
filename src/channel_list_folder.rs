@@ -14,7 +14,7 @@ use crate::utils;
 
 static PATH_CH_LIST_FOLDER: &str = "ch_list_folder.json";
 
-#[derive(Serialize, Deserialize, Debug, Clone, Builder)]
+#[derive(Serialize, Deserialize, Debug, Clone, Builder, PartialEq, Eq)]
 pub struct FolderSettings {
     pub ch_list: HashSet<SlackChannelId>,
     // #[default = "false"]
@@ -37,6 +37,12 @@ impl ChannelListFolders {
             .or_insert_with(|| FolderSettings::new(HashSet::new()))
             .ch_list
             .insert(channel);
+        self
+    }
+    fn delete_channel_list(&mut self, folder: &str, channel: &SlackChannelId) -> &Self {
+        if let Some(folder) = self.0.get_mut(folder) {
+            folder.ch_list.remove(channel);
+        }
         self
     }
     fn get_channel_list(&self, folder: &str) -> Option<HashSet<SlackChannelId>> {
@@ -86,13 +92,23 @@ pub async fn add_channel_list(folder: &str, channel: SlackChannelId) -> anyhow::
 
     Ok(())
 }
+pub async fn delete_channel_list(folder: &str, channel: SlackChannelId) -> anyhow::Result<()> {
+    let path_ch_list = Path::new(PATH_CH_LIST_FOLDER);
+    let mut ch_list_folders: ChannelListFolders = load_ch_list_folders_json().await?;
 
+    let ch_list_folders = ch_list_folders.delete_channel_list(folder, &channel);
+
+    let new_content = serde_json::to_string_pretty(ch_list_folders)?;
+    utils::update_json(path_ch_list, new_content).await?;
+
+    Ok(())
+}
 pub async fn get_channel_list(folder_name: &str) -> anyhow::Result<HashSet<SlackChannelId>> {
     let ch_list_folders: ChannelListFolders = load_ch_list_folders_json().await?;
 
     let ch_list = &ch_list_folders
         .get_channel_list(folder_name)
-        .context("the tag is not exist")?;
+        .context("the tag does not exist")?;
     Ok(ch_list.clone())
 }
 pub async fn change_retrieve_bot(folder_name: &str, do_retrieve_bot: bool) -> anyhow::Result<()> {
@@ -117,13 +133,24 @@ mod tests {
     #[tokio::test]
     async fn test_create_and_add_channel_list() {
         let test_ch = SlackChannelId::new("C01234567".to_string());
-        add_channel_list("poi", test_ch.clone()).await.unwrap();
+        add_channel_list("test", test_ch.clone()).await.unwrap();
 
         let channel_folder = load_ch_list_folders_json().await.unwrap();
         let has_channel = channel_folder
-            .get_channel_list("poi")
+            .get_channel_list("test")
             .unwrap()
             .contains(&test_ch);
         assert!(has_channel);
+    }
+    #[tokio::test]
+    async fn delete_channel_list_test() {
+        let folder_list = load_ch_list_folders_json().await.unwrap();
+        let test_ch = SlackChannelId::new("C987654321".to_string());
+        let _ = add_channel_list("test", test_ch.clone()).await;
+
+        let _ = delete_channel_list("test", test_ch).await;
+        let add_delete_folder_list = load_ch_list_folders_json().await.unwrap();
+
+        assert_eq!(folder_list.0, add_delete_folder_list.0);
     }
 }
