@@ -110,7 +110,7 @@ pub async fn command_event_handler(
                 .map(utils::channel_id_to_channel_name)
                 .collect::<Vec<_>>();
             let ch_list_message =
-                format!("タグに登録されたチャンネルは以下です。 {ch_name_list:#?}");
+                format!("タグ {tag} に登録されたチャンネルは以下です。 {ch_name_list:#?}");
             send_message(ch_list_message).await?;
         }
         _ => {

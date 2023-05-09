@@ -40,8 +40,11 @@ impl ChannelListFolders {
         self
     }
     fn delete_channel_list(&mut self, folder: &str, channel: &SlackChannelId) -> &Self {
-        if let Some(folder) = self.0.get_mut(folder) {
-            folder.ch_list.remove(channel);
+        if let Some(folder_settings) = self.0.get_mut(folder) {
+            folder_settings.ch_list.remove(channel);
+            if folder_settings.ch_list.is_empty() {
+                self.0.remove(folder);
+            }
         }
         self
     }
