@@ -4,8 +4,7 @@ use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use slack_morphism::{
     prelude::{
-        SlackApiBotsInfoRequest, SlackApiBotsInfoResponse, SlackApiChatPostMessageRequest,
-        SlackApiChatPostMessageResponse, SlackApiUsersProfileGetRequest,
+        SlackApiBotsInfoRequest, SlackApiBotsInfoResponse, SlackApiUsersProfileGetRequest,
         SlackApiUsersProfileGetResponse, SlackHyperClient,
     },
     SlackApiTokenType, SlackBotId, SlackMessageSender, SlackUserId,

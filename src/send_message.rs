@@ -6,7 +6,7 @@ use slack_morphism::{
         SlackApiChatPostEphemeralRequest, SlackApiChatPostEphemeralResponse,
         SlackApiChatPostMessageRequest, SlackApiChatPostMessageResponse, SlackHyperClient,
     },
-    SlackApiTokenType, SlackChannelId,
+    SlackApiTokenType,
 };
 
 use crate::utils;

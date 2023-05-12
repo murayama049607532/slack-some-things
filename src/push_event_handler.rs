@@ -3,8 +3,7 @@ use std::sync::Arc;
 use anyhow::Context;
 use slack_morphism::{
     prelude::{
-        events::SlackEventCallbackBody::*, SlackApiChatPostMessageRequest,
-        SlackApiChatPostMessageResponse, SlackClientEventsUserState, SlackHyperClient,
+        events::SlackEventCallbackBody::*, SlackApiChatPostMessageRequest, SlackClientEventsUserState, SlackHyperClient,
         SlackPushEventCallback,
     },
     SlackMessageContent,
