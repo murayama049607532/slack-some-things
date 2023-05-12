@@ -47,7 +47,7 @@ channel list folder に関連するコマンドとして、add、retrieve_bot、
 #### retrieve_bot
 
 指定したタグの channel list folder がボットによるメッセージを収集するかを設定します。（初期値は false） \
-第二引数が true であれば、ボットメッセージを収集するようになり、それ以外の文字列が入力された場合、ボットメッセージを無視します。（修正予定）
+第二引数が true であれば、ボットメッセージを収集するようになり、false であれば、ボットメッセージを無視します。
 
 `/channel_bugyo retrieve_bot [tag] [bool]`
 
@@ -78,6 +78,12 @@ dist channel にメッセージを収集するには、チャンネルに Channe
 Channel Bugyo が追加されているチャンネルにおいて使用することで、そのチャンネルを dist channel とし、指定したタグで収集対象となっているチャンネルのメッセージを収集します。
 
 `/channel_bugyo set [tag_1] [tag_2] [tag_3] ...`
+
+#### create_channel
+
+指定したタグを収集対象とする新たなプライベートチャンネルを作成します。
+
+`/channel_bugyo create_channel [new_channel_name] [tag_1] [tag_2] [tag_3] ...`
 
 ## todo!
 

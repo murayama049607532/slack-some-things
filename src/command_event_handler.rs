@@ -6,15 +6,12 @@ use slack_morphism::{
     prelude::{
         SlackApiChatPostMessageRequest, SlackClientEventsUserState, SlackCommandEvent,
         SlackCommandEventResponse, SlackHyperClient,
-    },
-    SlackChannelId, SlackMessageContent,
+    }, SlackMessageContent,
 };
 
 use crate::{
     commands,
-    create_channel::create_retrieve_tags_channel,
-    dist_target_map::{channel_dist, channel_list_folder},
-    set_target_tags, slack_sender, utils,
+    dist_target_map::{channel_list_folder}, slack_sender,
 };
 
 #[allow(clippy::too_many_lines)]

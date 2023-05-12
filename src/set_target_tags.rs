@@ -1,7 +1,7 @@
 use futures::StreamExt;
-use std::sync::Arc;
 
-use slack_morphism::{prelude::SlackHyperClient, SlackChannelId};
+
+use slack_morphism::{SlackChannelId};
 
 use crate::dist_target_map::channel_dist;
 

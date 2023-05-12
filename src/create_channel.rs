@@ -4,7 +4,7 @@ use anyhow::Context;
 use slack_morphism::{
     prelude::{
         SlackApiConversationsCreateRequest, SlackApiConversationsCreateResponse,
-        SlackApiConversationsInviteRequest, SlackApiConversationsInviteResponse, SlackHyperClient,
+        SlackApiConversationsInviteRequest, SlackHyperClient,
     },
     SlackApiTokenType, SlackChannelId, SlackUserId,
 };
