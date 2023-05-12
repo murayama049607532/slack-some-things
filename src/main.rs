@@ -1,10 +1,10 @@
 #![warn(clippy::pedantic)]
-mod channel_dist;
-mod channel_list_folder;
 mod command_event_handler;
+mod create_channel;
+mod dist_target_map;
 mod process_message;
 mod push_event_handler;
-mod retrieve_messages;
+mod set_target_tags;
 mod slack_sender;
 mod utils;
 

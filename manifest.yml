@@ -21,9 +21,12 @@ oauth_config:
       - chat:write.customize
       - commands
       - groups:history
+      - team:read
       - users.profile:read
       - users:read
-      - team:read
+      - groups:write.topic
+      - groups:write
+      - groups:write.invites
 settings:
   event_subscriptions:
     user_events:

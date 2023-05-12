@@ -10,8 +10,13 @@ use slack_morphism::{
     SlackChannelId, SlackMessageContent,
 };
 
-use crate::{channel_dist, channel_list_folder, slack_sender, utils};
+use crate::{
+    create_channel::create_retrieve_tags_channel,
+    dist_target_map::{channel_dist, channel_list_folder},
+    set_target_tags, slack_sender, utils,
+};
 
+#[allow(clippy::too_many_lines)]
 pub async fn command_event_handler(
     event: SlackCommandEvent,
     cli: Arc<SlackHyperClient>,
@@ -19,22 +24,19 @@ pub async fn command_event_handler(
 ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
     println!("{event:#?}");
     let channel_id_command = event.channel_id.clone();
+    let user_id_command = event.user_id;
 
     let full = event.text.clone().unwrap_or(String::new());
     let mut args_iter = full.split_whitespace();
     let first_arg = args_iter.next().context("error")?;
 
-    if event.command.0.as_str() != "/channel_bugyo" {
-        println!("command:{}", event.command.0.as_str());
-        return Ok(SlackCommandEventResponse::new(SlackMessageContent::new()));
-    }
-
+    let cli_send_msg = cli.clone();
     let send_message = |msg_txt: String| async {
         let msg_req = SlackApiChatPostMessageRequest::new(
             channel_id_command.clone(),
             SlackMessageContent::new().with_text(msg_txt),
         );
-        slack_sender::send_message_req(cli, msg_req).await
+        slack_sender::send_message_req(cli_send_msg, msg_req).await
     };
 
     match first_arg {
@@ -71,18 +73,22 @@ pub async fn command_event_handler(
             send_message(delete_text).await?;
         }
         "set" => {
-            let tags_stream = futures::stream::iter(args_iter.clone());
-            let tags = args_iter.clone().collect::<Vec<_>>();
-            tags_stream
-                .for_each(|tag| async {
-                    channel_dist::add_dists_json(channel_id_command.clone(), tag)
-                        .await
-                        .unwrap_or(());
-                })
-                .await;
+            let tags = args_iter
+                .map(std::string::ToString::to_string)
+                .collect::<Vec<String>>();
+            set_target_tags::set_targets(&channel_id_command, &tags).await?;
             let set_text = format!(
                 "以降、本チャンネルは以下のタグに登録されたチャンネルのメッセージを収集します。{tags:#?}"
             );
+            send_message(set_text).await?;
+        }
+        "create_channel" => {
+            let channel_name = args_iter.next().context("argument error")?.to_string();
+            let tags = args_iter
+                .map(std::string::ToString::to_string)
+                .collect::<Vec<String>>();
+            create_retrieve_tags_channel(cli, &tags, channel_name, user_id_command).await?;
+            let set_text = format!("test message:{tags:#?}");
             send_message(set_text).await?;
         }
         "retrieve_bot" => {

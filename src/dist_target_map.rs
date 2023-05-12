@@ -1,12 +1,15 @@
+pub mod channel_dist;
+pub mod channel_list_folder;
+
 use std::collections::{HashMap, HashSet};
 
 use anyhow::Context;
 use futures::StreamExt;
 use slack_morphism::{prelude::SlackMessageEvent, SlackChannelId};
 
-use crate::{channel_dist, channel_list_folder, utils};
+use crate::utils;
 
-use super::channel_list_folder::FolderSettings;
+use channel_list_folder::FolderSettings;
 
 pub async fn get_target_folder_list(dist: SlackChannelId) -> anyhow::Result<Vec<FolderSettings>> {
     let tags = channel_dist::get_channel_tags(dist).await?;
@@ -62,7 +65,7 @@ impl DistTargetMap {
     }
 }
 
-pub async fn get_all_dist_target_map() -> anyhow::Result<DistTargetMap> {
+pub async fn get_all_map() -> anyhow::Result<DistTargetMap> {
     let dists = channel_dist::get_dists_list().await?;
     let dists_stream = futures::stream::iter(dists);
     let dist_target_map = dists_stream

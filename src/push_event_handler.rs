@@ -11,7 +11,7 @@ use slack_morphism::{
 };
 use tokio_stream::StreamExt;
 
-use crate::{process_message, retrieve_messages::get_all_dist_target_map, slack_sender};
+use crate::{dist_target_map::get_all_map, process_message, slack_sender};
 
 pub async fn push_event_handler(
     event: SlackPushEventCallback,
@@ -26,7 +26,7 @@ pub async fn push_event_handler(
                 .origin
                 .channel
                 .context("cannot get channel id")?;
-            let dist_target_map = get_all_dist_target_map().await?;
+            let dist_target_map = get_all_map().await?;
             let is_target = dist_target_map.is_target(msg_event.clone())?;
             if !is_target {
                 return Ok(());
