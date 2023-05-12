@@ -11,6 +11,7 @@ use slack_morphism::{
 };
 
 use crate::{
+    commands,
     create_channel::create_retrieve_tags_channel,
     dist_target_map::{channel_dist, channel_list_folder},
     set_target_tags, slack_sender, utils,
@@ -41,67 +42,33 @@ pub async fn command_event_handler(
 
     match first_arg {
         "add" => {
-            let tag = args_iter.next().context("error")?;
-            let channels = args_iter.clone().collect::<Vec<_>>();
-            let channel_stream = futures::stream::iter(args_iter);
-            channel_stream
-                .for_each(|channel| async {
-                    let channel_id =
-                        utils::channel_preprocess(channel).unwrap_or(SlackChannelId(String::new()));
-                    channel_list_folder::add_channel_list(tag, channel_id)
-                        .await
-                        .unwrap_or(());
-                })
-                .await;
+            let (tag, channels) = commands::add_command(args_iter).await?;
             let add_text = format!("タグ {tag} に {channels:#?} が追加されました");
             send_message(add_text).await?;
         }
         "delete" => {
-            let tag = args_iter.next().context("error")?;
-            let channels = args_iter.clone().collect::<Vec<_>>();
-            let channel_stream = futures::stream::iter(args_iter);
-            channel_stream
-                .for_each(|channel| async {
-                    let channel_id =
-                        utils::channel_preprocess(channel).unwrap_or(SlackChannelId(String::new()));
-                    channel_list_folder::delete_channel_list(tag, channel_id)
-                        .await
-                        .unwrap_or(());
-                })
-                .await;
+            let (tag, channels) = commands::delete_command(args_iter).await?;
             let delete_text = format!("タグ {tag} から {channels:#?} が削除されました");
             send_message(delete_text).await?;
         }
         "set" => {
-            let tags = args_iter
-                .map(std::string::ToString::to_string)
-                .collect::<Vec<String>>();
-            set_target_tags::set_targets(&channel_id_command, &tags).await?;
+            let tags = commands::set_command(args_iter, &channel_id_command).await?;
             let set_text = format!(
                 "以降、本チャンネルは以下のタグに登録されたチャンネルのメッセージを収集します。{tags:#?}"
             );
             send_message(set_text).await?;
         }
         "create_channel" => {
-            let channel_name = args_iter.next().context("argument error")?.to_string();
-            let tags = args_iter
-                .map(std::string::ToString::to_string)
-                .collect::<Vec<String>>();
-            create_retrieve_tags_channel(cli, &tags, channel_name, user_id_command).await?;
+            let tags = commands::create_command(cli, args_iter, user_id_command).await?;
             let set_text = format!("test message:{tags:#?}");
             send_message(set_text).await?;
         }
         "retrieve_bot" => {
-            let tag = args_iter.next().context("argument error")?;
-            let do_retrieve_bot_str = args_iter.next().context("argument error")?;
-            let do_retrieve_bot = do_retrieve_bot_str == "true";
-            channel_list_folder::change_retrieve_bot(tag, do_retrieve_bot).await?;
-            let retreieve_bot = if do_retrieve_bot {
-                "以降、このタグはボットによるメッセージを収集します。"
-            } else {
-                "以降、このタグはボットによるメッセージを無視します。"
-            };
-            send_message(retreieve_bot.to_string()).await?;
+            let do_retrieve_bot = commands::retreieve_bot_command(args_iter).await?;
+            let retrieve_or_ignore = if do_retrieve_bot { "収集" } else { "無視" };
+            let retreieve_bot_text =
+                format!("以降、このタグはボットによるメッセージを{retrieve_or_ignore}します。");
+            send_message(retreieve_bot_text.to_string()).await?;
         }
         "tag_list" => {
             let tags = channel_list_folder::get_tag_list().await?;
@@ -109,12 +76,7 @@ pub async fn command_event_handler(
             send_message(tag_list_message).await?;
         }
         "ch_list" => {
-            let tag = args_iter.next().context("argument error")?;
-            let ch_id_list = channel_list_folder::get_channel_list(tag).await?;
-            let ch_name_list = ch_id_list
-                .iter()
-                .map(utils::channel_id_to_channel_name)
-                .collect::<Vec<_>>();
+            let (tag, ch_name_list) = commands::ch_list_command(args_iter).await?;
             let ch_list_message =
                 format!("タグ {tag} に登録されたチャンネルは以下です。 {ch_name_list:#?}");
             send_message(ch_list_message).await?;
