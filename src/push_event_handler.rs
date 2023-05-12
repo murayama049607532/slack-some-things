@@ -11,7 +11,11 @@ use slack_morphism::{
 };
 use tokio_stream::StreamExt;
 
-use crate::{dist_target_map::get_all_map, process_message, slack_sender};
+use crate::{
+    dist_target_map::get_all_map,
+    process_message::{self, sender_profile::fetch_profile},
+    send_message::{self, SlackApiMessageRequest, SlackApiMessageResponse},
+};
 
 pub async fn push_event_handler(
     event: SlackPushEventCallback,
@@ -35,7 +39,7 @@ pub async fn push_event_handler(
             let dists = dist_target_map.target_to_dists(&channel_id_from);
             let sender = msg_event.clone().sender;
 
-            let sender_profile = slack_sender::get_sender_profile(cli.clone(), sender).await?;
+            let sender_profile = fetch_profile(cli.clone(), sender).await?;
 
             let message_reqs = dists
                 .iter()
@@ -60,9 +64,12 @@ pub async fn push_event_handler(
                 .map(|msg_req| {
                     let cli_clone = Arc::clone(&cli);
                     async move {
-                        let res =
-                            slack_sender::send_message_req(cli_clone, msg_req.clone()).await?;
-                        anyhow::Ok::<SlackApiChatPostMessageResponse>(res)
+                        let res = send_message::send_message(
+                            cli_clone,
+                            SlackApiMessageRequest::PostMessage(msg_req.clone()),
+                        )
+                        .await?;
+                        anyhow::Ok::<SlackApiMessageResponse>(res)
                     }
                 })
                 .then(|s| async { s.await })

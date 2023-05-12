@@ -1,17 +1,17 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use futures::StreamExt;
 use slack_morphism::{
     prelude::{
-        SlackApiChatPostMessageRequest, SlackClientEventsUserState, SlackCommandEvent,
-        SlackCommandEventResponse, SlackHyperClient,
-    }, SlackMessageContent,
+        SlackApiChatPostEphemeralRequest, SlackApiChatPostMessageRequest,
+        SlackClientEventsUserState, SlackCommandEvent, SlackCommandEventResponse, SlackHyperClient,
+    },
+    SlackMessageContent,
 };
 
 use crate::{
     commands,
-    dist_target_map::{channel_list_folder}, slack_sender,
+    send_message::{self, SlackApiMessageRequest},
 };
 
 #[allow(clippy::too_many_lines)]
@@ -28,13 +28,21 @@ pub async fn command_event_handler(
     let mut args_iter = full.split_whitespace();
     let first_arg = args_iter.next().context("error")?;
 
-    let cli_send_msg = cli.clone();
     let send_message = |msg_txt: String| async {
         let msg_req = SlackApiChatPostMessageRequest::new(
             channel_id_command.clone(),
             SlackMessageContent::new().with_text(msg_txt),
         );
-        slack_sender::send_message_req(cli_send_msg, msg_req).await
+        send_message::send_message(cli.clone(), SlackApiMessageRequest::PostMessage(msg_req)).await
+    };
+    let send_ephemeral = |ephem_txt: String| async {
+        let msg_req = SlackApiChatPostEphemeralRequest::new(
+            channel_id_command.clone(),
+            user_id_command.clone(),
+            SlackMessageContent::new().with_text(ephem_txt),
+        );
+        send_message::send_message(cli.clone(), SlackApiMessageRequest::PostEphemeral(msg_req))
+            .await
     };
 
     match first_arg {
@@ -56,9 +64,10 @@ pub async fn command_event_handler(
             send_message(set_text).await?;
         }
         "create_channel" => {
-            let tags = commands::create_command(cli, args_iter, user_id_command).await?;
-            let set_text = format!("test message:{tags:#?}");
-            send_message(set_text).await?;
+            let (new_channel_id, tags) =
+                commands::create_command(cli.clone(), args_iter, user_id_command.clone()).await?;
+            let create_text = format!("以下のタグに登録されたメッセージを収集する新しいチャンネル <#{new_channel_id}> を作成しました:{tags:#?}");
+            send_ephemeral(create_text).await?;
         }
         "retrieve_bot" => {
             let do_retrieve_bot = commands::retreieve_bot_command(args_iter).await?;
@@ -68,7 +77,7 @@ pub async fn command_event_handler(
             send_message(retreieve_bot_text.to_string()).await?;
         }
         "tag_list" => {
-            let tags = channel_list_folder::get_tag_list().await?;
+            let tags = commands::tag_list_command().await?;
             let tag_list_message = format!("タグのリストは以下です。 {tags:#?}");
             send_message(tag_list_message).await?;
         }

@@ -1,3 +1,5 @@
+pub mod sender_profile;
+
 use anyhow::Context;
 use regex::Regex;
 
@@ -6,7 +8,7 @@ use slack_morphism::{
     SlackChannelId, SlackMessageContent,
 };
 
-use crate::slack_sender::SenderProfile;
+use self::sender_profile::SenderProfile;
 
 pub fn message_event_to_req(
     msg_eve: SlackMessageEvent,

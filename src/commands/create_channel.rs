@@ -9,7 +9,9 @@ use slack_morphism::{
     SlackApiTokenType, SlackChannelId, SlackUserId,
 };
 
-use crate::{set_target_tags, utils};
+use crate::utils;
+
+use super::set_target_tags::set_targets;
 
 async fn create_priv_channel(
     cli: Arc<SlackHyperClient>,
@@ -39,7 +41,7 @@ pub async fn create_retrieve_tags_channel(
     tags: &[String],
     channel_name: String,
     user_id: SlackUserId,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<SlackChannelId> {
     let create_res = create_priv_channel(cli.clone(), channel_name).await?;
     let channel_id = create_res.channel.id;
 
@@ -47,8 +49,8 @@ pub async fn create_retrieve_tags_channel(
         .await
         .context("failed to invite user to created channel")?;
 
-    set_target_tags::set_targets(&channel_id, tags)
+    set_targets(&channel_id, tags)
         .await
         .context("failed to set tags in created channel")?;
-    Ok(())
+    Ok(channel_id)
 }

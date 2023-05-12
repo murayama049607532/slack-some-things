@@ -13,18 +13,6 @@ use slack_morphism::{
 
 use crate::utils::get_token;
 
-pub async fn send_message_req(
-    cli: Arc<SlackHyperClient>,
-    msg_req: SlackApiChatPostMessageRequest,
-) -> anyhow::Result<SlackApiChatPostMessageResponse> {
-    let app_token = get_token(&SlackApiTokenType::Bot)?;
-    let session = cli.open_session(&app_token);
-    let res = session
-        .chat_post_message(&msg_req)
-        .await
-        .context("failed to post message.")?;
-    Ok(res)
-}
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SenderProfile {
     pub icon_url: url::Url,
@@ -32,13 +20,13 @@ pub struct SenderProfile {
 }
 
 // should be refactor
-pub async fn get_sender_profile(
+pub async fn fetch_profile(
     cli: Arc<SlackHyperClient>,
     sender: SlackMessageSender,
 ) -> anyhow::Result<SenderProfile> {
     match sender.user {
         Some(user_id) => {
-            let user_profile = get_user_profile(cli, user_id).await?;
+            let user_profile = fetch_user_profile(cli, user_id).await?;
             println!("{user_profile:#?}");
             let user_icon = user_profile.get_icon_url()?;
             let user_name = user_profile.get_display_name()?;
@@ -49,7 +37,7 @@ pub async fn get_sender_profile(
         }
         None => match sender.bot_id {
             Some(bot_id) => {
-                let bot_profile = get_bot_info(cli, bot_id).await?;
+                let bot_profile = fetch_bot_info(cli, bot_id).await?;
                 let bot_icon = bot_profile.get_icon_url()?;
                 let bot_name = bot_profile.get_display_name()?;
                 Ok(SenderProfile {
@@ -62,7 +50,7 @@ pub async fn get_sender_profile(
     }
 }
 
-pub async fn get_user_profile(
+pub async fn fetch_user_profile(
     cli: Arc<SlackHyperClient>,
     user_id: SlackUserId,
 ) -> anyhow::Result<SlackApiUsersProfileGetResponse> {
@@ -75,7 +63,7 @@ pub async fn get_user_profile(
         .context("failed to get user's icon")?;
     Ok(res)
 }
-pub async fn get_bot_info(
+pub async fn fetch_bot_info(
     cli: Arc<SlackHyperClient>,
     bot_id: SlackBotId,
 ) -> anyhow::Result<SlackApiBotsInfoResponse> {

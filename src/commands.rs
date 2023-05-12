@@ -1,10 +1,13 @@
+mod create_channel;
+mod set_target_tags;
+
 use futures::StreamExt;
 use slack_morphism::{prelude::SlackHyperClient, SlackChannelId, SlackUserId};
 use std::{str::SplitWhitespace, sync::Arc};
 
 use anyhow::{anyhow, Context};
 
-use crate::{create_channel, dist_target_map::channel_list_folder, set_target_tags, utils};
+use crate::{dist_target_map::channel_list_folder, utils};
 
 pub async fn add_command(mut args_iter: SplitWhitespace<'_>) -> anyhow::Result<(&str, Vec<&str>)> {
     let tag = args_iter.next().context("error")?;
@@ -56,13 +59,15 @@ pub async fn create_command(
     cli: Arc<SlackHyperClient>,
     mut args_iter: SplitWhitespace<'_>,
     user_id_command: SlackUserId,
-) -> anyhow::Result<Vec<String>> {
+) -> anyhow::Result<(SlackChannelId, Vec<String>)> {
     let channel_name = args_iter.next().context("argument error")?.to_string();
     let tags = args_iter
         .map(std::string::ToString::to_string)
         .collect::<Vec<String>>();
-    create_channel::create_retrieve_tags_channel(cli, &tags, channel_name, user_id_command).await?;
-    Ok(tags)
+    let channel_id =
+        create_channel::create_retrieve_tags_channel(cli, &tags, channel_name, user_id_command)
+            .await?;
+    Ok((channel_id, tags))
 }
 
 pub async fn ch_list_command(
@@ -87,4 +92,8 @@ pub async fn retreieve_bot_command(mut args_iter: SplitWhitespace<'_>) -> anyhow
     }?;
     channel_list_folder::change_retrieve_bot(tag, do_retrieve_bot).await?;
     Ok(do_retrieve_bot)
+}
+
+pub async fn tag_list_command() -> anyhow::Result<Vec<String>> {
+    channel_list_folder::get_tag_list().await
 }
