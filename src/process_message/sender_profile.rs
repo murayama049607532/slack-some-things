@@ -76,11 +76,11 @@ pub async fn fetch_bot_info(
     Ok(res)
 }
 
-pub trait GetterSenderProfile {
+pub trait GetterProfile {
     fn get_icon_url(&self) -> anyhow::Result<url::Url>;
     fn get_display_name(&self) -> anyhow::Result<String>;
 }
-impl GetterSenderProfile for SlackApiUsersProfileGetResponse {
+impl GetterProfile for SlackApiUsersProfileGetResponse {
     fn get_icon_url(&self) -> anyhow::Result<url::Url> {
         let icon_str = &self
             .profile
@@ -110,7 +110,7 @@ impl GetterSenderProfile for SlackApiUsersProfileGetResponse {
         Ok(display_name)
     }
 }
-impl GetterSenderProfile for SlackApiBotsInfoResponse {
+impl GetterProfile for SlackApiBotsInfoResponse {
     fn get_icon_url(&self) -> anyhow::Result<url::Url> {
         let icons = self
             .bot

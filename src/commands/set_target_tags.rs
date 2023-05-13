@@ -1,7 +1,6 @@
 use futures::StreamExt;
 
-
-use slack_morphism::{SlackChannelId};
+use slack_morphism::SlackChannelId;
 
 use crate::dist_target_map::channel_dist;
 

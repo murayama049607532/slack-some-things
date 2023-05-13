@@ -3,8 +3,8 @@ use std::sync::Arc;
 use anyhow::Context;
 use slack_morphism::{
     prelude::{
-        events::SlackEventCallbackBody::*, SlackApiChatPostMessageRequest, SlackClientEventsUserState, SlackHyperClient,
-        SlackPushEventCallback,
+        events::SlackEventCallbackBody::*, SlackApiChatPostMessageRequest,
+        SlackClientEventsUserState, SlackHyperClient, SlackPushEventCallback,
     },
     SlackMessageContent,
 };
@@ -12,8 +12,8 @@ use tokio_stream::StreamExt;
 
 use crate::{
     dist_target_map::get_all_map,
+    post_message::{self, SlackApiMessageRequest, SlackApiMessageResponse},
     process_message::{self, sender_profile::fetch_profile},
-    send_message::{self, SlackApiMessageRequest, SlackApiMessageResponse},
 };
 
 pub async fn push_event_handler(
@@ -63,7 +63,7 @@ pub async fn push_event_handler(
                 .map(|msg_req| {
                     let cli_clone = Arc::clone(&cli);
                     async move {
-                        let res = send_message::send_message(
+                        let res = post_message::send_req(
                             cli_clone,
                             SlackApiMessageRequest::PostMessage(msg_req.clone()),
                         )

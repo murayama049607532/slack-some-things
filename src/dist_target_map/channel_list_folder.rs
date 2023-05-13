@@ -6,7 +6,7 @@ use std::{
 use anyhow::{Context, Ok};
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
-use slack_morphism::SlackChannelId;
+use slack_morphism::{SlackChannelId, SlackUserId};
 
 use tokio::{fs::OpenOptions, io::AsyncReadExt};
 
@@ -21,6 +21,7 @@ pub struct FolderSettings {
     // pub reaction: bool,
     #[default = "false"]
     pub bot: bool,
+    pub private_user: Option<SlackUserId>,
 }
 impl FolderSettings {
     pub fn is_target(&self, target: &SlackChannelId) -> bool {
