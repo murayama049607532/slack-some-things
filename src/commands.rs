@@ -7,7 +7,11 @@ use std::{str::SplitWhitespace, sync::Arc};
 
 use anyhow::{anyhow, Context};
 
-use crate::{dist_target_map::channel_list_folder, post_message::MessagePoster, utils};
+use crate::{
+    dist_target_map::operate_folder::{self, FolderOperation},
+    post_message::MessagePoster,
+    utils,
+};
 
 pub async fn add_command(
     cli: Arc<SlackHyperClient>,
@@ -16,12 +20,12 @@ pub async fn add_command(
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
     let first_arg = args_iter.next().context("argument error")?;
-    let (tag, private_user) = match first_arg {
+    let (tag, operation) = match first_arg {
         "--public" => {
             let tag = args_iter.next().context("error")?;
-            (tag, None)
+            (tag, FolderOperation::AddPublic)
         }
-        tag => (tag, Some(user_id_command)),
+        tag => (tag, FolderOperation::AddPrivate),
     };
     let channels = args_iter.clone().collect::<Vec<_>>();
     let channel_stream = futures::stream::iter(args_iter);
@@ -29,9 +33,15 @@ pub async fn add_command(
         .for_each(|channel| async {
             let channel_id =
                 utils::channel_preprocess(channel).unwrap_or(SlackChannelId(String::new()));
-            channel_list_folder::add_channel_list(tag, channel_id, private_user.clone())
-                .await
-                .unwrap_or(());
+            operate_folder::operate_channel_list(
+                tag,
+                channel_id,
+                user_id_command.clone(),
+                FolderOperation::AddPrivate,
+                None,
+            )
+            .await
+            .unwrap_or(());
         })
         .await;
     let add_text = format!("タグ {tag} に {channels:#?} が追加されました");
@@ -55,9 +65,15 @@ pub async fn delete_command(
         .for_each(|channel| async {
             let channel_id =
                 utils::channel_preprocess(channel).unwrap_or(SlackChannelId(String::new()));
-            channel_list_folder::delete_channel_list(tag, channel_id, user_id_command.clone())
-                .await
-                .unwrap_or(());
+            operate_folder::operate_channel_list(
+                tag,
+                channel_id,
+                user_id_command.clone(),
+                FolderOperation::Delete,
+                None,
+            )
+            .await
+            .unwrap_or(());
         })
         .await;
     let delete_text = format!("タグ {tag} から {channels:#?} が削除されました");
@@ -122,7 +138,14 @@ pub async fn retreieve_bot_command(
         "false" => Ok(false),
         _ => Err(anyhow!("argument should be true or false")),
     }?;
-    channel_list_folder::change_retrieve_bot(tag, do_retrieve_bot, user_id_command).await?;
+    operate_folder::operate_channel_list(
+        tag,
+        channel_id_command.clone(),
+        user_id_command,
+        FolderOperation::RetrieveBot,
+        Some(do_retrieve_bot),
+    )
+    .await?;
     let retrieve_or_ignore = if do_retrieve_bot { "収集" } else { "無視" };
     let retreieve_bot_text =
         format!("以降、このタグはボットによるメッセージを{retrieve_or_ignore}します。");
@@ -137,7 +160,7 @@ pub async fn tag_list_command(
     channel_id_command: SlackChannelId,
     user_id_command: SlackUserId,
 ) -> anyhow::Result<()> {
-    let tags = channel_list_folder::get_tag_list().await;
+    let tags = operate_folder::get_tag_list(user_id_command.clone()).await;
     let tag_list_text = format!("タグのリストは以下です。 {tags:#?}");
     let _ = MessagePoster::new(channel_id_command, tag_list_text, cli)
         .post_ephemeral(user_id_command)
@@ -152,7 +175,8 @@ pub async fn ch_list_command(
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
     let tag = args_iter.next().context("argument error")?;
-    let ch_id_list = channel_list_folder::get_channel_list(tag, user_id_command.clone()).await?;
+    let ch_id_list =
+        operate_folder::get_channel_list(tag.to_string(), user_id_command.clone()).await?;
     let ch_name_list = ch_id_list
         .iter()
         .map(utils::channel_id_to_channel_name)

@@ -1,5 +1,6 @@
 pub mod channel_dist;
 pub mod channel_list_folder;
+pub mod operate_folder;
 
 use std::collections::{HashMap, HashSet};
 
@@ -13,17 +14,15 @@ use channel_list_folder::FolderSettings;
 
 pub async fn get_target_folder_list(dist: SlackChannelId) -> anyhow::Result<Vec<FolderSettings>> {
     let tags = channel_dist::get_channel_tags(dist).await?;
-    let ch_list_folders = channel_list_folder::load_ch_list_folders_json().await?;
+    let ch_list_folders = operate_folder::load_ch_list_folders_json().await?;
 
     let target_folders = tags
         .into_iter()
         .map(|s| {
-            let folder_settings = ch_list_folders
-                .get_forder_settings(&s)
-                .cloned()
-                .unwrap_or(FolderSettings::new(HashSet::new()));
+            let folder_settings = ch_list_folders.get_forder_settings(&s);
             folder_settings
         })
+        .flatten()
         .collect();
 
     Ok(target_folders)
