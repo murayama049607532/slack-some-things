@@ -19,8 +19,7 @@ pub async fn get_target_folder_list(dist: SlackChannelId) -> anyhow::Result<Vec<
         .into_iter()
         .map(|s| {
             let folder_settings = ch_list_folders
-                .0
-                .get(&s)
+                .get_forder_settings(&s)
                 .cloned()
                 .unwrap_or(FolderSettings::new(HashSet::new()));
             folder_settings
@@ -57,8 +56,8 @@ impl DistTargetMap {
             .context("failed to get channel id")?;
 
         let is_target = all_settings.iter().any(|settings| {
-            let is_contain = settings.ch_list.contains(&channel_from);
-            let retrieve_bot = settings.bot;
+            let is_contain = settings.is_target(&channel_from);
+            let retrieve_bot = settings.get_bot();
             (!is_bot || retrieve_bot) && is_contain && !is_self
         });
         Ok(is_target)

@@ -12,16 +12,24 @@ use crate::{dist_target_map::channel_list_folder, post_message::MessagePoster, u
 pub async fn add_command(
     cli: Arc<SlackHyperClient>,
     channel_id_command: SlackChannelId,
+    user_id_command: SlackUserId,
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
-    let tag = args_iter.next().context("error")?;
+    let first_arg = args_iter.next().context("argument error")?;
+    let (tag, private_user) = match first_arg {
+        "--public" => {
+            let tag = args_iter.next().context("error")?;
+            (tag, None)
+        }
+        tag => (tag, Some(user_id_command)),
+    };
     let channels = args_iter.clone().collect::<Vec<_>>();
     let channel_stream = futures::stream::iter(args_iter);
     channel_stream
         .for_each(|channel| async {
             let channel_id =
                 utils::channel_preprocess(channel).unwrap_or(SlackChannelId(String::new()));
-            channel_list_folder::add_channel_list(tag, channel_id)
+            channel_list_folder::add_channel_list(tag, channel_id, private_user.clone())
                 .await
                 .unwrap_or(());
         })
@@ -37,6 +45,7 @@ pub async fn add_command(
 pub async fn delete_command(
     cli: Arc<SlackHyperClient>,
     channel_id_command: SlackChannelId,
+    user_id_command: SlackUserId,
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
     let tag = args_iter.next().context("error")?;
@@ -46,7 +55,7 @@ pub async fn delete_command(
         .for_each(|channel| async {
             let channel_id =
                 utils::channel_preprocess(channel).unwrap_or(SlackChannelId(String::new()));
-            channel_list_folder::delete_channel_list(tag, channel_id)
+            channel_list_folder::delete_channel_list(tag, channel_id, user_id_command.clone())
                 .await
                 .unwrap_or(());
         })
@@ -103,6 +112,7 @@ pub async fn create_command(
 pub async fn retreieve_bot_command(
     cli: Arc<SlackHyperClient>,
     channel_id_command: SlackChannelId,
+    user_id_command: SlackUserId,
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
     let tag = args_iter.next().context("argument error")?;
@@ -112,7 +122,7 @@ pub async fn retreieve_bot_command(
         "false" => Ok(false),
         _ => Err(anyhow!("argument should be true or false")),
     }?;
-    channel_list_folder::change_retrieve_bot(tag, do_retrieve_bot).await?;
+    channel_list_folder::change_retrieve_bot(tag, do_retrieve_bot, user_id_command).await?;
     let retrieve_or_ignore = if do_retrieve_bot { "収集" } else { "無視" };
     let retreieve_bot_text =
         format!("以降、このタグはボットによるメッセージを{retrieve_or_ignore}します。");
@@ -142,7 +152,7 @@ pub async fn ch_list_command(
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
     let tag = args_iter.next().context("argument error")?;
-    let ch_id_list = channel_list_folder::get_channel_list(tag).await?;
+    let ch_id_list = channel_list_folder::get_channel_list(tag, user_id_command.clone()).await?;
     let ch_name_list = ch_id_list
         .iter()
         .map(utils::channel_id_to_channel_name)
