@@ -14,7 +14,7 @@ use channel_list_folder::FolderSettings;
 
 pub async fn get_target_folder_list(dist: SlackChannelId) -> anyhow::Result<Vec<FolderSettings>> {
     let tags = channel_dist::get_channel_tags(dist).await?;
-    let ch_list_folders = operate_folder::load_ch_list_folders_json().await?;
+    let ch_list_folders = operate_folder::load_user_folders_json().await?;
 
     let target_folders = tags
         .into_iter()

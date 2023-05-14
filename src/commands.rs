@@ -34,7 +34,7 @@ pub async fn add_command(
             let channel_id =
                 utils::channel_preprocess(channel).unwrap_or(SlackChannelId(String::new()));
             operate_folder::operate_channel_list(
-                tag,
+                tag.to_string(),
                 channel_id,
                 user_id_command.clone(),
                 FolderOperation::AddPrivate,
@@ -66,7 +66,7 @@ pub async fn delete_command(
             let channel_id =
                 utils::channel_preprocess(channel).unwrap_or(SlackChannelId(String::new()));
             operate_folder::operate_channel_list(
-                tag,
+                tag.to_string(),
                 channel_id,
                 user_id_command.clone(),
                 FolderOperation::Delete,
@@ -131,7 +131,7 @@ pub async fn retreieve_bot_command(
     user_id_command: SlackUserId,
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
-    let tag = args_iter.next().context("argument error")?;
+    let tag = args_iter.next().context("argument error")?.to_string();
     let do_retrieve_bot_str = args_iter.next().context("argument error")?;
     let do_retrieve_bot = match do_retrieve_bot_str {
         "true" => Ok(true),
@@ -175,8 +175,7 @@ pub async fn ch_list_command(
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
     let tag = args_iter.next().context("argument error")?;
-    let ch_id_list =
-        operate_folder::get_channel_list(tag.to_string(), user_id_command.clone()).await?;
+    let ch_id_list = operate_folder::get_channel_list(tag, user_id_command.clone()).await?;
     let ch_name_list = ch_id_list
         .iter()
         .map(utils::channel_id_to_channel_name)
