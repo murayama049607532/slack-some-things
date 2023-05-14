@@ -11,10 +11,11 @@ use slack_morphism::{
 };
 
 use crate::utils;
+
 #[derive(Debug, Clone)]
 pub enum SlackApiMessageRequest {
     PostMessage(SlackApiChatPostMessageRequest),
-    PostEphemeral(SlackApiChatPostEphemeralRequest),
+    //PostEphemeral(SlackApiChatPostEphemeralRequest),
 }
 #[derive(Debug, Clone)]
 pub enum SlackApiMessageResponse {
@@ -73,12 +74,12 @@ pub async fn send_req(
                 .await
                 .context("failed to post message.")?,
         ),
-        SlackApiMessageRequest::PostEphemeral(req) => SlackApiMessageResponse::PostEphemeral(
-            session
-                .chat_post_ephemeral(&req)
-                .await
-                .context("failed to post message.")?,
-        ),
+        // SlackApiMessageRequest::PostEphemeral(req) => SlackApiMessageResponse::PostEphemeral(
+        //     session
+        //         .chat_post_ephemeral(&req)
+        //         .await
+        //         .context("failed to post message.")?,
+        // ),
     };
     Ok(message_res)
 }

@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    path::Path,
-};
+use std::{collections::HashSet, path::Path};
 
 use anyhow::Context;
 use slack_morphism::{SlackChannelId, SlackUserId};
@@ -87,8 +84,8 @@ pub async fn get_channel_list(
     Ok(ch_list.clone())
 }
 pub async fn get_tag_list(user_id: SlackUserId) -> anyhow::Result<Vec<String>> {
-    let ch_list_folders = load_ch_list_folders_json(user_id).await?;
-    let tags = ch_list_folders.get_tag_list();
+    let ch_list_folders = load_user_folders_json().await?;
+    let tags = ch_list_folders.available_tag_list(&user_id);
     Ok(tags)
 }
 #[cfg(test)]

@@ -3,8 +3,7 @@ pub mod channel_list_folder;
 pub mod operate_folder;
 
 use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
+    collections::{HashMap},
 };
 
 use anyhow::Context;

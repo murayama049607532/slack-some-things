@@ -1,16 +1,8 @@
-use std::{
-    collections::{HashMap, HashSet},
-    path::Path,
-};
+use std::collections::{HashMap, HashSet};
 
-use anyhow::{Context, Ok};
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use slack_morphism::{SlackChannelId, SlackUserId};
-
-use tokio::{fs::OpenOptions, io::AsyncReadExt};
-
-use crate::utils;
 
 pub const PUBLIC_TAGS: &str = "***public***";
 
@@ -92,11 +84,19 @@ impl UserFolders {
             .or_insert(ChannelListFolder::default());
         folder
     }
+    fn get_public_ch_list_folders(&self) -> ChannelListFolder {
+        let public = SlackUserId::new(PUBLIC_TAGS.to_string());
+        self.get_user_ch_list_folders(&public)
+    }
     pub fn is_valid_for_user(&self, user: &SlackUserId, tag: &str) -> bool {
         let valid_for_user = self.get_user_ch_list_folders(user).has_tag(tag);
-        let valid_for_public = self
-            .get_user_ch_list_folders(&SlackUserId::new(PUBLIC_TAGS.to_string()))
-            .has_tag(tag);
+        let valid_for_public = self.get_public_ch_list_folders().has_tag(tag);
         valid_for_public || valid_for_user
+    }
+    pub fn available_tag_list(&self, user: &SlackUserId) -> Vec<String> {
+        let mut tag_list_user = self.get_user_ch_list_folders(user).get_tag_list();
+        let tag_list_public = self.get_public_ch_list_folders().get_tag_list();
+        tag_list_user.extend_from_slice(&tag_list_public);
+        tag_list_user
     }
 }
