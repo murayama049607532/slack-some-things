@@ -2,7 +2,10 @@ pub mod channel_dist;
 pub mod channel_list_folder;
 pub mod operate_folder;
 
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use anyhow::Context;
 use futures::StreamExt;
@@ -14,15 +17,16 @@ use channel_list_folder::FolderSettings;
 
 pub async fn get_target_folder_list(dist: SlackChannelId) -> anyhow::Result<Vec<FolderSettings>> {
     let tags = channel_dist::get_channel_tags(dist).await?;
-    let ch_list_folders = operate_folder::load_user_folders_json().await?;
+    let user_folders = operate_folder::load_user_folders_json().await?;
 
     let target_folders = tags
         .into_iter()
-        .map(|s| {
-            let folder_settings = ch_list_folders.get_forder_settings(&s);
+        .filter_map(|s| {
+            let user_id = s.get_owner();
+            let ch_list_folders = user_folders.get_user_ch_list_folders(user_id);
+            let folder_settings = ch_list_folders.get_folder_settings(s.get_tag());
             folder_settings
         })
-        .flatten()
         .collect();
 
     Ok(target_folders)

@@ -45,11 +45,11 @@ pub async fn create_retrieve_tags_channel(
     let create_res = create_priv_channel(cli.clone(), channel_name).await?;
     let channel_id = create_res.channel.id;
 
-    invite_user(cli, user_id, channel_id.clone())
+    invite_user(cli, user_id.clone(), channel_id.clone())
         .await
         .context("failed to invite user to created channel")?;
 
-    set_targets(&channel_id, tags)
+    set_targets(&channel_id, user_id, tags)
         .await
         .context("failed to set tags in created channel")?;
     Ok(channel_id)

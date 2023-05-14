@@ -8,7 +8,10 @@ use std::{str::SplitWhitespace, sync::Arc};
 use anyhow::{anyhow, Context};
 
 use crate::{
-    dist_target_map::operate_folder::{self, FolderOperation},
+    dist_target_map::{
+        channel_list_folder,
+        operate_folder::{self, FolderOperation},
+    },
     post_message::MessagePoster,
     utils,
 };
@@ -20,12 +23,15 @@ pub async fn add_command(
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
     let first_arg = args_iter.next().context("argument error")?;
-    let (tag, operation) = match first_arg {
+    let (tag, owner_add) = match first_arg {
         "--public" => {
             let tag = args_iter.next().context("error")?;
-            (tag, FolderOperation::AddPublic)
+            (
+                tag,
+                SlackUserId::new(channel_list_folder::PUBLIC_TAGS.to_string()),
+            )
         }
-        tag => (tag, FolderOperation::AddPrivate),
+        tag => (tag, user_id_command),
     };
     let channels = args_iter.clone().collect::<Vec<_>>();
     let channel_stream = futures::stream::iter(args_iter);
@@ -36,8 +42,8 @@ pub async fn add_command(
             operate_folder::operate_channel_list(
                 tag.to_string(),
                 channel_id,
-                user_id_command.clone(),
-                FolderOperation::AddPrivate,
+                owner_add.clone(),
+                FolderOperation::Add,
                 None,
             )
             .await
@@ -86,12 +92,13 @@ pub async fn delete_command(
 pub async fn set_command(
     cli: Arc<SlackHyperClient>,
     channel_id_command: SlackChannelId,
+    user_id_command: SlackUserId,
     args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
     let tags = args_iter
         .map(std::string::ToString::to_string)
         .collect::<Vec<String>>();
-    set_target_tags::set_targets(&channel_id_command, &tags).await?;
+    set_target_tags::set_targets(&channel_id_command, user_id_command, &tags).await?;
     let set_text = format!(
         "以降、本チャンネルは以下のタグに登録されたチャンネルのメッセージを収集します。{tags:#?}"
     );

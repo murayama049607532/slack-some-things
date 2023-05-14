@@ -12,6 +12,8 @@ use tokio::{fs::OpenOptions, io::AsyncReadExt};
 
 use crate::utils;
 
+pub const PUBLIC_TAGS: &str = "***public***";
+
 #[derive(Serialize, Deserialize, Debug, Clone, Builder, PartialEq, Eq)]
 pub struct FolderSettings {
     ch_list: HashSet<SlackChannelId>,
@@ -32,19 +34,18 @@ pub struct ChannelListFolder(HashMap<String, FolderSettings>);
 
 impl ChannelListFolder {
     pub fn add_channel_list(&mut self, folder_tag: String, channel: SlackChannelId) -> &Self {
-        let _ = self
-            .0
+        self.0
             .entry(folder_tag)
             .or_insert_with(|| FolderSettings::new(HashSet::new()))
             .ch_list
             .insert(channel);
         self
     }
-    pub fn delete_channel_list(&mut self, folder_tag: String, channel: &SlackChannelId) -> &Self {
-        if let Some(folder_settings) = self.0.get_mut(&folder_tag) {
+    pub fn delete_channel_list(&mut self, folder_tag: &str, channel: &SlackChannelId) -> &Self {
+        if let Some(folder_settings) = self.0.get_mut(folder_tag) {
             folder_settings.ch_list.remove(channel);
             if folder_settings.ch_list.is_empty() {
-                self.0.remove(&folder_tag);
+                self.0.remove(folder_tag);
             }
         }
         self
@@ -68,8 +69,11 @@ impl ChannelListFolder {
         ch_list
     }
     pub fn get_tag_list(&self) -> Vec<String> {
-        let tag_list = self.0.into_keys().collect::<Vec<_>>();
+        let tag_list = self.0.keys().cloned().collect::<Vec<_>>();
         tag_list
+    }
+    pub fn has_tag(&self, tag: &str) -> bool {
+        self.0.contains_key(tag)
     }
 }
 
@@ -77,8 +81,22 @@ impl ChannelListFolder {
 pub struct UserFolders(HashMap<String, ChannelListFolder>);
 
 impl UserFolders {
-    pub fn get_user_ch_list_folders(mut self, user: &str) -> &ChannelListFolder {
-        let folder = self.0.get(user).unwrap_or(&ChannelListFolder::default());
+    pub fn get_user_ch_list_folders(&self, user: &SlackUserId) -> ChannelListFolder {
+        let folder = self.0.get(&user.to_string()).cloned().unwrap_or_default();
         folder
+    }
+    pub fn mut_user_ch_list_folders(&mut self, user: &SlackUserId) -> &mut ChannelListFolder {
+        let folder = self
+            .0
+            .entry(user.to_string())
+            .or_insert(ChannelListFolder::default());
+        folder
+    }
+    pub fn is_valid_for_user(&self, user: &SlackUserId, tag: &str) -> bool {
+        let valid_for_user = self.get_user_ch_list_folders(user).has_tag(tag);
+        let valid_for_public = self
+            .get_user_ch_list_folders(&SlackUserId::new(PUBLIC_TAGS.to_string()))
+            .has_tag(tag);
+        valid_for_public || valid_for_user
     }
 }

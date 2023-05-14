@@ -5,22 +5,39 @@ use std::{
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
-use slack_morphism::SlackChannelId;
+use slack_morphism::{SlackChannelId, SlackUserId};
 use tokio::{fs::OpenOptions, io::AsyncReadExt};
 
 use crate::utils;
 
 const PATH_CH_DISTS_FOLDER: &str = "ch_dists.json";
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct TagOwner {
+    tag: String,
+    owner: SlackUserId,
+}
+impl TagOwner {
+    pub fn new(tag: String, owner: SlackUserId) -> Self {
+        Self { tag, owner }
+    }
+    pub fn get_tag(&self) -> &str {
+        &self.tag
+    }
+    pub fn get_owner(&self) -> &SlackUserId {
+        &self.owner
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ChannelDists(HashMap<SlackChannelId, HashSet<String>>);
+pub struct ChannelDists(HashMap<SlackChannelId, HashSet<TagOwner>>);
 
 impl ChannelDists {
-    fn add_tag_to_dist(&mut self, dist: SlackChannelId, tag: &str) -> &Self {
+    fn add_tag_to_dist(&mut self, dist: SlackChannelId, user: SlackUserId, tag: &str) -> &Self {
         self.0
             .entry(dist)
-            .or_insert_with(HashSet::new)
-            .insert(tag.to_string());
+            .or_default()
+            .insert(TagOwner::new(tag.to_string(), user));
         self
     }
 }
@@ -41,16 +58,20 @@ async fn load_ch_dists_json() -> anyhow::Result<ChannelDists> {
     Ok(ch_dists)
 }
 
-pub async fn add_dists_json(dist: SlackChannelId, tag: &str) -> anyhow::Result<()> {
+pub async fn add_dists_json(
+    dist: SlackChannelId,
+    user: SlackUserId,
+    tag: &str,
+) -> anyhow::Result<()> {
     let path_ch_dists = Path::new(PATH_CH_DISTS_FOLDER);
     let mut ch_dists = load_ch_dists_json().await?;
 
-    let ch_dists_new = ch_dists.add_tag_to_dist(dist, tag);
+    let ch_dists_new = ch_dists.add_tag_to_dist(dist, user, tag);
     let new_content = serde_json::to_string_pretty(ch_dists_new)?;
     utils::update_json(path_ch_dists, new_content).await?;
     Ok(())
 }
-pub async fn get_channel_tags(dist: SlackChannelId) -> anyhow::Result<HashSet<String>> {
+pub async fn get_channel_tags(dist: SlackChannelId) -> anyhow::Result<HashSet<TagOwner>> {
     let ch_dists = load_ch_dists_json().await?;
     let tags = ch_dists
         .0
@@ -65,16 +86,25 @@ pub async fn get_dists_list() -> anyhow::Result<Vec<SlackChannelId>> {
 }
 #[cfg(test)]
 mod tests {
+    use slack_morphism::SlackUserId;
+
     use super::*;
 
     #[tokio::test]
     async fn test_add_dists() {
         let test_ch = SlackChannelId::new("C012345678".to_string());
-        add_dists_json(test_ch.clone(), "poi").await.unwrap();
+        let user_id = SlackUserId::new("U1946536".to_string());
+        add_dists_json(test_ch.clone(), user_id.clone(), "poi")
+            .await
+            .unwrap();
 
         let dists = load_ch_dists_json().await.unwrap();
 
-        let has_channel = dists.0.get(&test_ch).unwrap().contains("poi");
+        let has_channel = dists
+            .0
+            .get(&test_ch)
+            .unwrap()
+            .contains(&TagOwner::new("poi".to_string(), user_id));
         assert!(has_channel);
     }
 }

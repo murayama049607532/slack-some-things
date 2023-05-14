@@ -29,7 +29,7 @@ pub async fn command_event_handler(
         "delete" => {
             commands::delete_command(cli, channel_id_command, user_id_command, args_iter).await?;
         }
-        "set" => commands::set_command(cli, channel_id_command, args_iter).await?,
+        "set" => commands::set_command(cli, channel_id_command, user_id_command, args_iter).await?,
         "create_channel" => {
             commands::create_command(
                 cli.clone(),
