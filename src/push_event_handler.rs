@@ -71,7 +71,7 @@ pub async fn push_event_handler(
                         anyhow::Ok::<SlackApiMessageResponse>(res)
                     }
                 })
-                .then(|s| async { s.await })
+                .then(|s| s)
                 .collect::<Vec<_>>()
                 .await;
             println!("{ress:#?}");

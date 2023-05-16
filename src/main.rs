@@ -15,7 +15,7 @@ async fn socket_mode_process() -> anyhow::Result<()> {
     let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
     let socket_mode_callbacks = SlackSocketModeListenerCallbacks::new()
         .with_push_events(push_event_handler::push_event_handler)
-        .with_command_events(command_event_handler::command_event_handler);
+        .with_command_events(command_event_handler::spawned_command_handler);
     let listner_environment = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())
             .with_error_handler(push_event_handler::error_handler),

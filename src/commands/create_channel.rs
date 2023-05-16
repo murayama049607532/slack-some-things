@@ -9,7 +9,7 @@ use slack_morphism::{
     SlackApiTokenType, SlackChannelId, SlackUserId,
 };
 
-use crate::utils;
+use crate::{post_message::MessagePoster, utils};
 
 use super::set_target_tags::set_targets;
 
@@ -45,12 +45,18 @@ pub async fn create_retrieve_tags_channel(
     let create_res = create_priv_channel(cli.clone(), channel_name).await?;
     let channel_id = create_res.channel.id;
 
-    invite_user(cli, user_id.clone(), channel_id.clone())
+    invite_user(cli.clone(), user_id.clone(), channel_id.clone())
         .await
         .context("failed to invite user to created channel")?;
 
     set_targets(&channel_id, user_id, tags)
         .await
         .context("failed to set tags in created channel")?;
+    let set_text = format!(
+        "以降、本チャンネルは以下のタグに登録されたチャンネルのメッセージを収集します。{tags:#?}"
+    );
+    let _ = MessagePoster::new(channel_id.clone(), set_text, cli)
+        .post_message()
+        .await?;
     Ok(channel_id)
 }

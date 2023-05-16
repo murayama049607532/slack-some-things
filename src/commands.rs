@@ -31,7 +31,7 @@ pub async fn add_command(
                 SlackUserId::new(channel_list_folder::PUBLIC_TAGS.to_string()),
             )
         }
-        tag => (tag, user_id_command),
+        tag => (tag, user_id_command.clone()),
     };
     let channels = args_iter.clone().collect::<Vec<_>>();
     let channel_stream = futures::stream::iter(args_iter);
@@ -52,7 +52,7 @@ pub async fn add_command(
         .await;
     let add_text = format!("タグ {tag} に {channels:#?} が追加されました");
     let _ = MessagePoster::new(channel_id_command, add_text, cli)
-        .post_message()
+        .post_ephemeral(user_id_command)
         .await?;
 
     Ok(())
@@ -84,7 +84,7 @@ pub async fn delete_command(
         .await;
     let delete_text = format!("タグ {tag} から {channels:#?} が削除されました");
     let _ = MessagePoster::new(channel_id_command, delete_text, cli)
-        .post_message()
+        .post_ephemeral(user_id_command)
         .await?;
     Ok(())
 }
@@ -98,12 +98,12 @@ pub async fn set_command(
     let tags = args_iter
         .map(std::string::ToString::to_string)
         .collect::<Vec<String>>();
-    set_target_tags::set_targets(&channel_id_command, user_id_command, &tags).await?;
+    set_target_tags::set_targets(&channel_id_command, user_id_command.clone(), &tags).await?;
     let set_text = format!(
         "以降、本チャンネルは以下のタグに登録されたチャンネルのメッセージを収集します。{tags:#?}"
     );
     let _ = MessagePoster::new(channel_id_command, set_text, cli)
-        .post_message()
+        .post_ephemeral(user_id_command)
         .await?;
     Ok(())
 }
@@ -148,7 +148,7 @@ pub async fn retreieve_bot_command(
     operate_folder::operate_channel_list(
         tag,
         channel_id_command.clone(),
-        user_id_command,
+        user_id_command.clone(),
         FolderOperation::RetrieveBot,
         Some(do_retrieve_bot),
     )
@@ -157,7 +157,7 @@ pub async fn retreieve_bot_command(
     let retreieve_bot_text =
         format!("以降、このタグはボットによるメッセージを{retrieve_or_ignore}します。");
     let _ = MessagePoster::new(channel_id_command, retreieve_bot_text, cli)
-        .post_message()
+        .post_ephemeral(user_id_command)
         .await?;
     Ok(())
 }
@@ -167,7 +167,7 @@ pub async fn tag_list_command(
     channel_id_command: SlackChannelId,
     user_id_command: SlackUserId,
 ) -> anyhow::Result<()> {
-    let tags = operate_folder::get_tag_list(user_id_command.clone()).await;
+    let tags = operate_folder::get_tag_list(user_id_command.clone()).await?;
     let tag_list_text = format!("タグのリストは以下です。 {tags:#?}");
     let _ = MessagePoster::new(channel_id_command, tag_list_text, cli)
         .post_ephemeral(user_id_command)

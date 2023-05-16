@@ -1,4 +1,6 @@
 /target
 ch_dists.json
 ch_list_folder.json
+ch_list_folder_test.json
+
 .env
