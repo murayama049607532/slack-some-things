@@ -48,6 +48,9 @@ channel list folder に関連するコマンドとして、add、retrieve_bot、
 例
 `/channel_bugyo delete major #general #random #active`
 
+`/channel_bugyo delete --public major #general #random #active`
+
+
 #### retrieve_bot
 
 指定したタグの channel list folder がボットによるメッセージを収集するかを設定します。（初期値は false） \
@@ -58,6 +61,9 @@ channel list folder に関連するコマンドとして、add、retrieve_bot、
 例
 `/channel_bugyo retrieve_bot major true`
 
+`/channel_bugyo retrieve_bot --public major true`
+
+
 Channel Bugyo は自身より発せられたメッセージを無視しますが、他のボットとの兼ね合い次第では無限ループが発生しえます。
 
 #### ch_list
@@ -65,6 +71,8 @@ Channel Bugyo は自身より発せられたメッセージを無視しますが
 指定したタグの収集対象チャンネルを羅列します。
 
 `/channel_bugyo ch_list [tag]`
+
+`/channel_bugyo ch_list --public [tag]`
 
 #### tag_list
 
@@ -75,7 +83,7 @@ Channel Bugyo は自身より発せられたメッセージを無視しますが
 ### user folder
 
 user folder はユーザIDをキーとし、バリューが channel list folder である HashMap です。 \
-各ユーザは自身の channel list folder を持ち、自身のフォルダとパブリックフォルダのみにアクセスできます。
+各ユーザは自身の channel list folder を持ち、自身のユーザフォルダとパブリックフォルダのみにアクセスできます。全てのコマンドはデフォルトでユーザフォルダにアクセスし、パブリックフォルダへのアクセスにはオプションによる指定が必要です。
 
 ### dist channel
 
@@ -88,16 +96,26 @@ Channel Bugyo が追加されているチャンネルにおいて使用するこ
 
 `/channel_bugyo set [tag_1] [tag_2] [tag_3] ...`
 
+`/channel_bugyo set --public [tag_1] [tag_2] [tag_3] ...`
+
+### unset
+
+set されているタグを収集対象から外します。
+
+`/channel_bugyo unset [tag_1] [tag_2] [tag_3] ...`
+
+`/channel_bugyo unset --public [tag_1] [tag_2] [tag_3] ...`
+
 #### create_channel
 
 指定したタグを収集対象とする新たなプライベートチャンネルを作成します。
 
 `/channel_bugyo create_channel [new_channel_name] [tag_1] [tag_2] [tag_3] ...`
 
-## todo!
-
-#### タグ減算機能
+`/channel_bugyo create_channel --public [new_channel_name] [tag_1] [tag_2] [tag_3] ...`
 
 #### target_list
 
+現在チャンネルが収集対象としているタグの一覧を表示します。
 
+`/channel_bugyo target_list

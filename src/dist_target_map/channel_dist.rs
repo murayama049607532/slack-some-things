@@ -40,12 +40,28 @@ impl ChannelDists {
             .insert(TagOwner::new(tag, user));
         self
     }
-    fn remove_tag(&mut self, dist: SlackChannelId, user: SlackUserId, tag: String) -> &Self {
-        self.0
+    fn remove_tag(
+        &mut self,
+        dist: SlackChannelId,
+        user: SlackUserId,
+        tag: String,
+    ) -> (&Self, bool) {
+        let is_success = self
+            .0
             .entry(dist)
             .or_default()
             .remove(&TagOwner::new(tag, user));
-        self
+        (self, is_success)
+    }
+    pub fn target_list(&self, dist: &SlackChannelId) -> anyhow::Result<Vec<String>> {
+        let target_list = self
+            .0
+            .get(dist)
+            .context("invalid dist channel")?
+            .iter()
+            .map(|t| t.get_tag().to_string())
+            .collect::<Vec<_>>();
+        Ok(target_list)
     }
 }
 async fn load_ch_dists_json() -> anyhow::Result<ChannelDists> {
@@ -86,7 +102,11 @@ pub async fn remove_dists_json(
     let path_ch_dists = Path::new(PATH_CH_DISTS_FOLDER);
     let mut ch_dists = load_ch_dists_json().await?;
 
-    let ch_dists_new = ch_dists.remove_tag(dist, user, tag);
+    let (ch_dists_new, success_to_remove) = ch_dists.remove_tag(dist, user, tag);
+    if !success_to_remove {
+        return Err(anyhow::anyhow!("failed to remove the tag"));
+    }
+
     let new_content = serde_json::to_string_pretty(ch_dists_new)?;
     utils::update_json(path_ch_dists, new_content).await?;
     Ok(())
@@ -103,6 +123,12 @@ pub async fn get_dists_list() -> anyhow::Result<Vec<SlackChannelId>> {
     let ch_dists = load_ch_dists_json().await?;
     let dists_list = ch_dists.0.keys().cloned().collect::<Vec<_>>();
     Ok(dists_list)
+}
+
+pub async fn fetch_target_list(dist: &SlackChannelId) -> anyhow::Result<Vec<String>> {
+    let ch_dists = load_ch_dists_json().await?;
+    let target_list = ch_dists.target_list(dist)?;
+    Ok(target_list)
 }
 #[cfg(test)]
 mod tests {

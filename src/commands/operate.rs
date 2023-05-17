@@ -6,7 +6,6 @@ use slack_morphism::{prelude::SlackHyperClient, SlackChannelId, SlackUserId};
 
 use crate::{
     dist_target_map::{
-        channel_list_folder,
         operate_folder::{self, FolderOperation},
         user_folders,
     },

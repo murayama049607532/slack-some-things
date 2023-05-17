@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::Path};
+use std::path::Path;
 
 use anyhow::Context;
 use slack_morphism::{SlackChannelId, SlackUserId};
@@ -6,7 +6,7 @@ use tokio::{fs::OpenOptions, io::AsyncReadExt};
 
 use crate::utils;
 
-use super::{channel_list_folder::ChannelListFolder, user_folders::UserFolders};
+use super::user_folders::UserFolders;
 
 #[derive(Debug, Clone)]
 pub enum FolderOperation {
@@ -81,6 +81,8 @@ pub async fn operate_channel_list_from_path(
 
 #[cfg(test)]
 mod tests {
+    use crate::dist_target_map::channel_list_folder::ChannelListFolder;
+
     use super::*;
 
     static PATH_CH_LIST_FOLDER_TEST: &str = "ch_list_folder_test.json";

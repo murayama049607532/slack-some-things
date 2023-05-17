@@ -1,4 +1,4 @@
-use std::{str::SplitWhitespace, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Context;
 use slack_morphism::{
@@ -87,6 +87,9 @@ pub async fn command_event_handler(
         }
         "ch_list" => {
             commands::ch_list_command(cli, channel_id_command, user_id_command, args_iter).await?;
+        }
+        "target_list" => {
+            commands::target_list_command(cli, channel_id_command, user_id_command).await?;
         }
         _ => {
             commands::undefined_command(cli, channel_id_command, user_id_command).await?;

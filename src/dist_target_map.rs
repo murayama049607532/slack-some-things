@@ -31,6 +31,7 @@ pub async fn get_target_folder_list(dist: SlackChannelId) -> anyhow::Result<Vec<
     Ok(target_folders)
 }
 
+#[derive(Debug, Default)]
 pub struct DistTargetMap(HashMap<SlackChannelId, Vec<FolderSettings>>);
 
 impl DistTargetMap {

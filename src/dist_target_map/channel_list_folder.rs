@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
-use slack_morphism::{SlackChannelId, SlackUserId};
+use slack_morphism::SlackChannelId;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Builder, PartialEq, Eq)]
 pub struct FolderSettings {

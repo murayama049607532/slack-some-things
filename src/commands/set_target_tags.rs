@@ -15,7 +15,7 @@ pub async fn set_targets(
     user_command: SlackUserId,
     tags: &[String],
     set: bool,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Vec<String>> {
     let user_folders = dist_target_map::operate_folder::load_user_folders_json().await?;
     let auth_tags_iter = tags
         .iter()
@@ -23,28 +23,26 @@ pub async fn set_targets(
 
     let tags_stream = futures::stream::iter(auth_tags_iter);
 
-    tags_stream
+    let tags = tags_stream
         .map(|tag| async {
             if set {
-                channel_dist::add_dists_json(
-                    channel_id.clone(),
-                    user_command.clone(),
-                    tag.to_string(),
-                )
-                .await
+                channel_dist::add_dists_json(channel_id.clone(), user_command.clone(), tag.clone())
+                    .await?;
             } else {
                 channel_dist::remove_dists_json(
                     channel_id.clone(),
                     user_command.clone(),
-                    tag.to_string(),
+                    tag.clone(),
                 )
-                .await
-            }
+                .await?;
+            };
+            anyhow::Ok(tag.clone())
         })
         .then(|s| s)
-        .try_collect()
+        .try_collect::<Vec<_>>()
         .await?;
-    Ok(())
+
+    Ok(tags)
 }
 
 pub async fn set_command(
@@ -69,9 +67,9 @@ pub async fn set_command(
         tags.insert(0, head.to_string());
     };
 
-    set_targets(&channel_id_command, owner_id, &tags, true).await?;
+    let set_tags = set_targets(&channel_id_command, owner_id, &tags, true).await?;
     let set_text = format!(
-        "以降、本チャンネルは以下のタグに登録されたチャンネルのメッセージを収集します。{tags:#?}"
+        "以降、本チャンネルは以下のタグに登録されたチャンネルのメッセージを収集します。{set_tags:#?}"
     );
     let _ = MessagePoster::new(channel_id_command, set_text, cli)
         .post_ephemeral(user_id_command)
@@ -101,9 +99,9 @@ pub async fn unset_command(
         tags.insert(0, head.to_string());
     };
 
-    set_targets(&channel_id_command, owner_id, &tags, false).await?;
+    let set_tags = set_targets(&channel_id_command, owner_id, &tags, false).await?;
     let set_text =
-        format!("以下のタグに登録されたチャンネルのメッセージの収集を停止します。{tags:#?}");
+        format!("以下のタグに登録されたチャンネルのメッセージの収集を停止します。{set_tags:#?}");
     let _ = MessagePoster::new(channel_id_command, set_text, cli)
         .post_ephemeral(user_id_command)
         .await?;
