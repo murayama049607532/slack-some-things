@@ -17,8 +17,7 @@ async fn socket_mode_process() -> anyhow::Result<()> {
         .with_push_events(push_event_handler::push_event_handler)
         .with_command_events(command_event_handler::spawned_command_handler);
     let listner_environment = Arc::new(
-        SlackClientEventsListenerEnvironment::new(client.clone())
-            .with_error_handler(push_event_handler::error_handler),
+        SlackClientEventsListenerEnvironment::new(client.clone()).with_error_handler(error_handler),
     );
     let socket_mode_listner = SlackClientSocketModeListener::new(
         &SlackClientSocketModeConfig::new(),
@@ -29,6 +28,16 @@ async fn socket_mode_process() -> anyhow::Result<()> {
     socket_mode_listner.listen_for(&app_token).await?;
     socket_mode_listner.serve().await;
     Ok(())
+}
+
+#[allow(clippy::needless_pass_by_value)]
+fn error_handler(
+    err: Box<dyn std::error::Error + Send + Sync>,
+    _client: Arc<SlackHyperClient>,
+    _states: SlackClientEventsUserState,
+) -> http::StatusCode {
+    println!("err:{err:#?}");
+    http::StatusCode::OK
 }
 
 #[tokio::main]

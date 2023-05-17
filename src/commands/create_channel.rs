@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{str::SplitWhitespace, sync::Arc};
 
 use anyhow::Context;
 use slack_morphism::{
@@ -9,7 +9,7 @@ use slack_morphism::{
     SlackApiTokenType, SlackChannelId, SlackUserId,
 };
 
-use crate::{post_message::MessagePoster, utils};
+use crate::{dist_target_map::user_folders, post_message::MessagePoster, utils};
 
 use super::set_target_tags::set_targets;
 
@@ -41,15 +41,16 @@ pub async fn create_retrieve_tags_channel(
     tags: &[String],
     channel_name: String,
     user_id: SlackUserId,
+    owner_id: SlackUserId,
 ) -> anyhow::Result<SlackChannelId> {
     let create_res = create_priv_channel(cli.clone(), channel_name).await?;
     let channel_id = create_res.channel.id;
 
-    invite_user(cli.clone(), user_id.clone(), channel_id.clone())
+    invite_user(cli.clone(), user_id, channel_id.clone())
         .await
         .context("failed to invite user to created channel")?;
 
-    set_targets(&channel_id, user_id, tags)
+    set_targets(&channel_id, owner_id, tags, true)
         .await
         .context("failed to set tags in created channel")?;
     let set_text = format!(
@@ -59,4 +60,37 @@ pub async fn create_retrieve_tags_channel(
         .post_message()
         .await?;
     Ok(channel_id)
+}
+
+pub async fn create_command(
+    cli: Arc<SlackHyperClient>,
+    channel_id_command: SlackChannelId,
+    user_id_command: SlackUserId,
+    mut args_iter: SplitWhitespace<'_>,
+) -> anyhow::Result<()> {
+    let first_arg = args_iter.next().context("argument error")?;
+    let (channel_name, owner_id) = match first_arg {
+        "--public" => (
+            args_iter.next().context("argument error")?.to_string(),
+            SlackUserId::new(user_folders::PUBLIC_TAGS.to_string()),
+        ),
+        channel => (channel.to_string(), user_id_command.clone()),
+    };
+
+    let tags = args_iter
+        .map(std::string::ToString::to_string)
+        .collect::<Vec<String>>();
+    let new_channel_id = create_retrieve_tags_channel(
+        cli.clone(),
+        &tags,
+        channel_name,
+        user_id_command.clone(),
+        owner_id,
+    )
+    .await?;
+    let create_text = format!("以下のタグに登録されたメッセージを収集する新しいチャンネル <#{new_channel_id}> を作成しました:{tags:#?}");
+    let _ = MessagePoster::new(channel_id_command, create_text, cli)
+        .post_ephemeral(user_id_command)
+        .await?;
+    Ok(())
 }

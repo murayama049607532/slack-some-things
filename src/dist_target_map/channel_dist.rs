@@ -33,11 +33,18 @@ impl TagOwner {
 pub struct ChannelDists(HashMap<SlackChannelId, HashSet<TagOwner>>);
 
 impl ChannelDists {
-    fn add_tag_to_dist(&mut self, dist: SlackChannelId, user: SlackUserId, tag: &str) -> &Self {
+    fn add_tag_to_dist(&mut self, dist: SlackChannelId, user: SlackUserId, tag: String) -> &Self {
         self.0
             .entry(dist)
             .or_default()
-            .insert(TagOwner::new(tag.to_string(), user));
+            .insert(TagOwner::new(tag, user));
+        self
+    }
+    fn remove_tag(&mut self, dist: SlackChannelId, user: SlackUserId, tag: String) -> &Self {
+        self.0
+            .entry(dist)
+            .or_default()
+            .remove(&TagOwner::new(tag, user));
         self
     }
 }
@@ -61,12 +68,25 @@ async fn load_ch_dists_json() -> anyhow::Result<ChannelDists> {
 pub async fn add_dists_json(
     dist: SlackChannelId,
     user: SlackUserId,
-    tag: &str,
+    tag: String,
 ) -> anyhow::Result<()> {
     let path_ch_dists = Path::new(PATH_CH_DISTS_FOLDER);
     let mut ch_dists = load_ch_dists_json().await?;
 
     let ch_dists_new = ch_dists.add_tag_to_dist(dist, user, tag);
+    let new_content = serde_json::to_string_pretty(ch_dists_new)?;
+    utils::update_json(path_ch_dists, new_content).await?;
+    Ok(())
+}
+pub async fn remove_dists_json(
+    dist: SlackChannelId,
+    user: SlackUserId,
+    tag: String,
+) -> anyhow::Result<()> {
+    let path_ch_dists = Path::new(PATH_CH_DISTS_FOLDER);
+    let mut ch_dists = load_ch_dists_json().await?;
+
+    let ch_dists_new = ch_dists.remove_tag(dist, user, tag);
     let new_content = serde_json::to_string_pretty(ch_dists_new)?;
     utils::update_json(path_ch_dists, new_content).await?;
     Ok(())
@@ -94,7 +114,7 @@ mod tests {
     async fn test_add_dists() {
         let test_ch = SlackChannelId::new("C012345678".to_string());
         let user_id = SlackUserId::new("U1946536".to_string());
-        add_dists_json(test_ch.clone(), user_id.clone(), "poi")
+        add_dists_json(test_ch.clone(), user_id.clone(), "poi".to_string())
             .await
             .unwrap();
 

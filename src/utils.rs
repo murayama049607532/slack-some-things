@@ -14,14 +14,14 @@ pub fn get_token(token_type: &SlackApiTokenType) -> anyhow::Result<SlackApiToken
         SlackApiTokenType::Bot => "SLACK_BOT_TOKEN",
         SlackApiTokenType::User => "SLACK_USER_TOKEN",
     };
-    let token_value: SlackApiTokenValue = env::var(token_key).context("Token is missing.")?.into();
+    let token_value: SlackApiTokenValue = env::var(token_key).context("token is missing.")?.into();
     let app_token = SlackApiToken::new(token_value);
     Ok(app_token)
 }
 
 pub fn get_self_bot_id() -> anyhow::Result<SlackBotId> {
     dotenv().ok();
-    let bot_id = env::var("SLACK_BOT_ID").context("my id is missing")?;
+    let bot_id = env::var("SLACK_BOT_ID").context("bot id is missing")?;
     Ok(SlackBotId(bot_id))
 }
 
@@ -44,9 +44,11 @@ pub async fn update_json(json_path: &Path, content: String) -> anyhow::Result<()
 }
 
 pub fn channel_preprocess(channel: &str) -> anyhow::Result<SlackChannelId> {
-    let channel_id_str = Regex::new(r"<#([^|]+)\|")?
+    let channel_id_str = Regex::new(r"<#([^|]+)\|")
+        .unwrap()
         .captures(channel)
-        .map_or("", |caps| caps.get(1).map_or("", |s| s.as_str()));
+        .and_then(|caps| caps.get(1).map(|s| s.as_str()))
+        .context("validation error")?;
     Ok(SlackChannelId(channel_id_str.to_string()))
 }
 

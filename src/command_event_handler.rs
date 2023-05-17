@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{str::SplitWhitespace, sync::Arc};
 
 use anyhow::Context;
 use slack_morphism::{
@@ -8,7 +8,10 @@ use slack_morphism::{
     SlackMessageContent,
 };
 
-use crate::{commands, post_message::MessagePoster};
+use crate::{
+    commands::{self, create_channel, operate, set_target_tags},
+    post_message::MessagePoster,
+};
 
 // retrurn response to slack early, to avoid timeout error
 pub async fn spawned_command_handler(
@@ -39,7 +42,6 @@ pub async fn handler_catch_error(
     }
 }
 
-#[allow(clippy::too_many_lines)]
 pub async fn command_event_handler(
     event: SlackCommandEvent,
     cli: Arc<SlackHyperClient>,
@@ -51,16 +53,23 @@ pub async fn command_event_handler(
 
     let full = event.text.clone().unwrap_or(String::new());
     let mut args_iter = full.split_whitespace();
-    let first_arg = args_iter.next().context("error")?;
+    let first_arg = args_iter.next().context("argument error")?;
 
     match first_arg {
-        "add" => commands::add_command(cli, channel_id_command, user_id_command, args_iter).await?,
+        "add" => operate::add_command(cli, channel_id_command, user_id_command, args_iter).await?,
         "delete" => {
-            commands::delete_command(cli, channel_id_command, user_id_command, args_iter).await?;
+            operate::delete_command(cli, channel_id_command, user_id_command, args_iter).await?;
         }
-        "set" => commands::set_command(cli, channel_id_command, user_id_command, args_iter).await?,
+        "set" => {
+            set_target_tags::set_command(cli, channel_id_command, user_id_command, args_iter)
+                .await?;
+        }
+        "unset" => {
+            set_target_tags::unset_command(cli, channel_id_command, user_id_command, args_iter)
+                .await?;
+        }
         "create_channel" => {
-            commands::create_command(
+            create_channel::create_command(
                 cli.clone(),
                 channel_id_command,
                 user_id_command.clone(),
@@ -69,7 +78,7 @@ pub async fn command_event_handler(
             .await?;
         }
         "retrieve_bot" => {
-            commands::retreieve_bot_command(cli, channel_id_command, user_id_command, args_iter)
+            operate::retreieve_bot_command(cli, channel_id_command, user_id_command, args_iter)
                 .await?;
         }
 

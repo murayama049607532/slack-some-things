@@ -1,10 +1,10 @@
 pub mod channel_dist;
 pub mod channel_list_folder;
 pub mod operate_folder;
+pub mod reader_folder;
+pub mod user_folders;
 
-use std::{
-    collections::{HashMap},
-};
+use std::collections::HashMap;
 
 use anyhow::Context;
 use futures::StreamExt;
@@ -22,7 +22,7 @@ pub async fn get_target_folder_list(dist: SlackChannelId) -> anyhow::Result<Vec<
         .into_iter()
         .filter_map(|s| {
             let user_id = s.get_owner();
-            let ch_list_folders = user_folders.get_user_ch_list_folders(user_id);
+            let ch_list_folders = user_folders.user_ch_list_folders(user_id);
             let folder_settings = ch_list_folders.get_folder_settings(s.get_tag());
             folder_settings
         })

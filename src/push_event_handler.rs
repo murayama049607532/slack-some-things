@@ -83,13 +83,3 @@ pub async fn push_event_handler(
 
     Ok(())
 }
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn error_handler(
-    err: Box<dyn std::error::Error + Send + Sync>,
-    _client: Arc<SlackHyperClient>,
-    _states: SlackClientEventsUserState,
-) -> http::StatusCode {
-    println!("err:{err:#?}");
-    http::StatusCode::OK
-}

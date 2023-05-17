@@ -6,16 +6,16 @@ use tokio::{fs::OpenOptions, io::AsyncReadExt};
 
 use crate::utils;
 
-use super::channel_list_folder::{ChannelListFolder, UserFolders};
+use super::{channel_list_folder::ChannelListFolder, user_folders::UserFolders};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum FolderOperation {
     Add,
     Delete,
     RetrieveBot,
 }
 
-static PATH_CH_LIST_FOLDER: &str = "ch_list_folder.json";
+const PATH_CH_LIST_FOLDER: &str = "ch_list_folder.json";
 
 pub async fn load_user_folders_json_from_path(path_ch_list: &Path) -> anyhow::Result<UserFolders> {
     let mut ch_list_folders_file = OpenOptions::new()
@@ -39,13 +39,6 @@ pub async fn load_user_folders_json_from_path(path_ch_list: &Path) -> anyhow::Re
 pub async fn load_user_folders_json() -> anyhow::Result<UserFolders> {
     let path_ch_list = Path::new(PATH_CH_LIST_FOLDER);
     load_user_folders_json_from_path(path_ch_list).await
-}
-
-pub async fn load_ch_list_folders_json(user: SlackUserId) -> anyhow::Result<ChannelListFolder> {
-    let ch_list_folder = load_user_folders_json()
-        .await?
-        .get_user_ch_list_folders(&user);
-    Ok(ch_list_folder)
 }
 
 pub async fn operate_channel_list(
@@ -85,22 +78,7 @@ pub async fn operate_channel_list_from_path(
 
     Ok(())
 }
-pub async fn get_channel_list(
-    tag: &str,
-    user: SlackUserId,
-) -> anyhow::Result<HashSet<SlackChannelId>> {
-    let ch_list_folders = load_ch_list_folders_json(user).await?;
 
-    let ch_list = &ch_list_folders
-        .get_channel_list(tag)
-        .context("the tag does not exist")?;
-    Ok(ch_list.clone())
-}
-pub async fn get_tag_list(user_id: SlackUserId) -> anyhow::Result<Vec<String>> {
-    let ch_list_folders = load_user_folders_json().await?;
-    let tags = ch_list_folders.available_tag_list(&user_id);
-    Ok(tags)
-}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -113,7 +91,7 @@ mod tests {
         let path_test = Path::new(PATH_CH_LIST_FOLDER_TEST);
         let ch_list_folder = load_user_folders_json_from_path(path_test)
             .await?
-            .get_user_ch_list_folders(&user);
+            .user_ch_list_folders(&user);
         Ok(ch_list_folder)
     }
     async fn operate_channel_list_test(
@@ -129,6 +107,7 @@ mod tests {
         Ok(())
     }
 
+    #[ignore = "json"]
     #[tokio::test]
     async fn test_create_and_add_channel_list() {
         let test_ch = SlackChannelId::new("C01234567".to_string());
@@ -163,7 +142,6 @@ mod tests {
         .await
         .unwrap();
 
-        println!("add");
         assert!(has_channel);
     }
 
@@ -176,7 +154,7 @@ mod tests {
         let ch_list_folder = load_user_folders_json_from_path(path_test)
             .await
             .unwrap()
-            .get_user_ch_list_folders(&user_id);
+            .user_ch_list_folders(&user_id);
 
         operate_channel_list_test(
             "test".to_string(),
@@ -200,9 +178,8 @@ mod tests {
         let add_delete_folder_list = load_user_folders_json_from_path(path_test)
             .await
             .unwrap()
-            .get_user_ch_list_folders(&user_id);
+            .user_ch_list_folders(&user_id);
 
-        println!("delete");
         assert_eq!(ch_list_folder, add_delete_folder_list);
     }
 }
