@@ -1,4 +1,5 @@
 pub mod create_channel;
+pub mod help;
 pub mod operate;
 pub mod set_target_tags;
 

@@ -91,6 +91,9 @@ pub async fn command_event_handler(
         "target_list" => {
             commands::target_list_command(cli, channel_id_command, user_id_command).await?;
         }
+        "help" => {
+            commands::help::help(cli, channel_id_command, user_id_command, args_iter).await?;
+        }
         _ => {
             commands::undefined_command(cli, channel_id_command, user_id_command).await?;
         }

@@ -1,8 +1,8 @@
-# Slack Some-Things
+# Channel Bugyo
 
 ## 概要
 
-Slack Some-Things（仮）は、カスタマイズ可能なチャンネル収集を行うためのSlack用アプリケーションです。Channel Bugyo が追加されているチャンネル内で、以下に説明されている設定を行うことで使用可能になります。 \
+Channel Bugyo（仮）は、カスタマイズ可能なチャンネルメッセージ集約を行うためのSlack用アプリケーションです。Channel Bugyo が追加されているチャンネル内で、以下に説明されている設定を行うことで使用可能になります。 \
 現在はプレビュー版です。 \
 アプリの権限設定については、manifest.yml を参照してください。
 
@@ -118,4 +118,4 @@ set されているタグを収集対象から外します。
 
 現在チャンネルが収集対象としているタグの一覧を表示します。
 
-`/channel_bugyo target_list
+`/channel_bugyo target_list`
