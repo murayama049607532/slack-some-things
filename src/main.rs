@@ -5,9 +5,12 @@ mod dist_target_map;
 mod post_message;
 mod process_message;
 mod push_event_handler;
+mod query;
 mod utils;
 
+use query::DB_URL;
 use slack_morphism::prelude::*;
+use sqlx::{migrate::MigrateDatabase, Sqlite};
 use std::sync::Arc;
 
 async fn socket_mode_process() -> anyhow::Result<()> {
@@ -42,6 +45,9 @@ fn error_handler(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    if !Sqlite::database_exists(DB_URL).await? {
+        Sqlite::create_database(DB_URL);
+    }
     socket_mode_process().await?;
 
     Ok(())

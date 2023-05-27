@@ -94,6 +94,7 @@ pub async fn add_dists_json(
     utils::update_json(path_ch_dists, new_content).await?;
     Ok(())
 }
+
 pub async fn remove_dists_json(
     dist: SlackChannelId,
     user: SlackUserId,

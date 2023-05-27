@@ -1,5 +1,5 @@
 use anyhow::Context as _;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use regex::Regex;
 use slack_morphism::{
     SlackApiToken, SlackApiTokenType, SlackApiTokenValue, SlackBotId, SlackChannelId,
