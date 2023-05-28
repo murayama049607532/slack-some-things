@@ -21,4 +21,6 @@ CREATE TABLE IF NOT EXISTS channel_list
         PRIMARY KEY(tag_id, channel_id),
         FOREIGN KEY (tag_id) REFERENCES user_folder(tag_id) ON DELETE CASCADE
     );
-INSERT INTO user_folder (tag_name, owner_id) VALUES ("test", "U01234567");
+INSERT INTO user_folder (tag_name, owner_id) VALUES ("test_dist", "U0987654");
+INSERT INTO channel_list (tag_id, channel_id)
+SELECT tag_id, 'C0123456789' FROM user_folder WHERE tag_name = 'test_dist' AND owner_id = 'U0987654';

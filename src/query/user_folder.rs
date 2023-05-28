@@ -36,7 +36,7 @@ pub async fn register_channel_with_pool(
     .execute(&pool)
     .await?;
 
-    let tag_id = utils::fetch_tag_id_with_pool(user, tag_name, pool.clone()).await?;
+    let tag_id = utils::fetch_tag_id_with_pool(user, tag_name, &pool).await?;
 
     let channel_id = channel.to_string();
     let _query_cl = sqlx::query!(
@@ -112,8 +112,8 @@ mod tests {
         pool: Pool<Sqlite>,
     ) -> anyhow::Result<(String, SlackChannelId, SlackUserId)> {
         let tag_name = "test";
-        let channel = SlackChannelId::new("C0123456789".to_string());
-        let user = SlackUserId::new("U0987654".to_string());
+        let channel = SlackChannelId::new("C01234".to_string());
+        let user = SlackUserId::new("U0987".to_string());
         register_channel_with_pool(tag_name, channel.clone(), user.clone(), pool).await?;
         Ok((tag_name.to_string(), channel, user))
     }
@@ -149,7 +149,7 @@ mod tests {
         let result_channel_id = sqlx::query!(
             "SELECT channel_id
             FROM channel_list
-            WHERE channel_id = 'C0123456789'
+            WHERE channel_id = 'C01234'
             ",
         )
         .fetch_one(&pool)
@@ -168,7 +168,7 @@ mod tests {
         let result_bot = sqlx::query!(
             "SELECT bot
             FROM user_folder
-            WHERE tag_name = 'test' AND owner_id = 'U0987654'
+            WHERE tag_name = 'test' AND owner_id = 'U0987'
             ",
         )
         .fetch_one(&pool)
@@ -182,7 +182,7 @@ mod tests {
         let result_bot = sqlx::query!(
             "SELECT bot
             FROM user_folder
-            WHERE tag_name = 'test' AND owner_id = 'U0987654'
+            WHERE tag_name = 'test' AND owner_id = 'U0987'
             ",
         )
         .fetch_one(&pool)
