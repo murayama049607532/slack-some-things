@@ -1,4 +1,3 @@
-pub mod channel_dist;
 pub mod channel_list_folder;
 pub mod operate_folder;
 pub mod reader_folder;
@@ -10,12 +9,12 @@ use anyhow::Context;
 use futures::StreamExt;
 use slack_morphism::{prelude::SlackMessageEvent, SlackChannelId};
 
-use crate::utils;
+use crate::{query::dist, utils};
 
 use channel_list_folder::FolderSettings;
 
 pub async fn get_target_folder_list(dist: SlackChannelId) -> anyhow::Result<Vec<FolderSettings>> {
-    let tags = channel_dist::get_channel_tags(dist).await?;
+    let tags = dist::tag_owner_list(&dist).await?;
     let user_folders = operate_folder::load_user_folders_json().await?;
 
     let target_folders = tags
@@ -68,7 +67,7 @@ impl DistTargetMap {
 }
 
 pub async fn get_all_map() -> anyhow::Result<DistTargetMap> {
-    let dists = channel_dist::get_dists_list().await?;
+    let dists = dist::dist_list().await?;
     let dists_stream = futures::stream::iter(dists);
     let dist_target_map = dists_stream
         .map(|s| async {

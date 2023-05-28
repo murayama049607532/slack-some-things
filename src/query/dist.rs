@@ -7,13 +7,23 @@ use super::{
     DB_URL,
 };
 
-#[derive(Default, Clone, FromRow, Debug)]
-struct Dist {
-    user_id: String,
-    tag_id: i64,
-    dist_channel_id: String,
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct TagOwner {
+    tag: String,
+    owner: SlackUserId,
 }
-async fn add_tag(dist: SlackChannelId, user: SlackUserId, tag: &str) -> anyhow::Result<()> {
+impl TagOwner {
+    pub fn new(tag: String, owner: SlackUserId) -> Self {
+        Self { tag, owner }
+    }
+    pub fn get_tag(&self) -> &str {
+        &self.tag
+    }
+    pub fn get_owner(&self) -> &SlackUserId {
+        &self.owner
+    }
+}
+pub async fn add_tag(dist: SlackChannelId, user: SlackUserId, tag: &str) -> anyhow::Result<()> {
     let pool = SqlitePool::connect(DB_URL).await?;
     add_tag_with_pool(dist, user, tag, pool).await
 }
@@ -41,8 +51,9 @@ async fn add_tag_with_pool(
 
     Ok(())
 }
-async fn remove_tag(dist: SlackChannelId, user: SlackUserId, tag: String) -> anyhow::Result<()> {
-    Ok(())
+pub async fn remove_tag(dist: SlackChannelId, user: SlackUserId, tag: &str) -> anyhow::Result<()> {
+    let pool = SqlitePool::connect(DB_URL).await?;
+    remove_tag_with_pool(dist, user, tag, pool).await
 }
 async fn remove_tag_with_pool(
     dist: SlackChannelId,
@@ -66,12 +77,44 @@ async fn remove_tag_with_pool(
 
     Ok(())
 }
-async fn fetch() -> anyhow::Result<Vec<Dist>> {
-    Ok(Vec::new())
+
+pub async fn tag_owner_list(dist: &SlackChannelId) -> anyhow::Result<Vec<TagOwner>> {
+    let pool = SqlitePool::connect(DB_URL).await?;
+    tag_owner_list_with_pool(dist, &pool).await
+}
+async fn tag_owner_list_with_pool(
+    dist: &SlackChannelId,
+    pool: &Pool<Sqlite>,
+) -> anyhow::Result<Vec<TagOwner>> {
+    let dist_str = dist.to_string();
+
+    let tag_owner_list = sqlx::query!(
+        "
+    SELECT uf.tag_name, uf.owner_id
+    FROM dist INNER JOIN user_folder AS uf
+    ON dist.tag_id = uf.tag_id
+    WHERE dist.dist_channel_id = $1
+        ",
+        dist_str
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|r| {
+        let owner_id = SlackUserId::new(r.owner_id);
+        TagOwner::new(r.tag_name, owner_id)
+    })
+    .collect::<Vec<_>>();
+
+    Ok(tag_owner_list)
+}
+pub async fn target_list(dist: &SlackChannelId) -> anyhow::Result<Vec<String>> {
+    let pool = SqlitePool::connect(DB_URL).await?;
+    target_list_with_pool(dist, pool).await
 }
 
 async fn target_list_with_pool(
-    dist: SlackChannelId,
+    dist: &SlackChannelId,
     pool: Pool<Sqlite>,
 ) -> anyhow::Result<Vec<String>> {
     let dist_str = dist.to_string();
@@ -80,6 +123,7 @@ async fn target_list_with_pool(
         "
     SELECT uf.tag_name
     FROM dist INNER JOIN user_folder AS uf
+    ON dist.tag_id = uf.tag_id
     WHERE dist.tag_id = uf.tag_id AND dist.dist_channel_id = $1
     ",
         dist_str
@@ -93,6 +137,13 @@ async fn target_list_with_pool(
     Ok(target_list)
 }
 
+#[allow(clippy::module_name_repetitions)]
+pub async fn dist_list() -> anyhow::Result<Vec<SlackChannelId>> {
+    let pool = SqlitePool::connect(DB_URL).await?;
+    dist_list_with_pool(pool).await
+}
+
+#[allow(clippy::module_name_repetitions)]
 async fn dist_list_with_pool(pool: Pool<Sqlite>) -> anyhow::Result<Vec<SlackChannelId>> {
     let dist_list = sqlx::query!(
         "
@@ -180,7 +231,7 @@ mod tests {
     async fn test_tag_list(pool: Pool<Sqlite>) -> anyhow::Result<()> {
         let (tag, dist, user) = add_test(pool.clone()).await?;
 
-        let tag_list = target_list_with_pool(dist, pool).await?;
+        let tag_list = target_list_with_pool(&dist, pool).await?;
         let is_contains = tag_list.contains(&tag);
 
         assert!(is_contains);
@@ -196,6 +247,20 @@ mod tests {
         let is_contains = dist_list.contains(&dist);
 
         assert!(is_contains);
+        Ok(())
+    }
+    #[sqlx::test(migrations = "./migrations")]
+
+    async fn test_tag_owner_list(pool: Pool<Sqlite>) -> anyhow::Result<()> {
+        let (tag, dist, user) = add_test(pool.clone()).await?;
+
+        let tag_owner_list = tag_owner_list_with_pool(&dist, &pool).await?;
+
+        let tag_owner = TagOwner::new(tag, user);
+        let is_contains = tag_owner_list.contains(&tag_owner);
+
+        assert!(is_contains);
+
         Ok(())
     }
 }

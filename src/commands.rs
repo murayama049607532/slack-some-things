@@ -9,8 +9,9 @@ use std::{str::SplitWhitespace, sync::Arc};
 use anyhow::Context;
 
 use crate::{
-    dist_target_map::{channel_dist, reader_folder, user_folders},
+    dist_target_map::{reader_folder, user_folders},
     post_message::MessagePoster,
+    query::dist,
     utils,
 };
 
@@ -61,7 +62,7 @@ pub async fn target_list_command(
     channel_id_command: SlackChannelId,
     user_id_command: SlackUserId,
 ) -> anyhow::Result<()> {
-    let target_list = channel_dist::fetch_target_list(&channel_id_command).await?;
+    let target_list = dist::target_list(&channel_id_command).await?;
     let target_list_text = format!(
         "現在このチャンネルが収集対象としているタグのリストは以下です。\n {target_list:#?}"
     );

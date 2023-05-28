@@ -6,8 +6,9 @@ use futures::{StreamExt, TryStreamExt};
 use slack_morphism::{prelude::SlackHyperClient, SlackChannelId, SlackUserId};
 
 use crate::{
-    dist_target_map::{self, channel_dist, user_folders},
+    dist_target_map::{self, user_folders},
     post_message::MessagePoster,
+    query::{self, dist},
 };
 
 pub async fn set_targets(
@@ -26,15 +27,10 @@ pub async fn set_targets(
     let tags = tags_stream
         .map(|tag| async {
             if set {
-                channel_dist::add_dists_json(channel_id.clone(), user_command.clone(), tag.clone())
-                    .await?;
+                dist::add_tag(channel_id.clone(), user_command.clone(), tag).await?;
+                //channel_dist::add_dists_json(channel_id.clone(), user_command.clone(), tag.clone())
             } else {
-                channel_dist::remove_dists_json(
-                    channel_id.clone(),
-                    user_command.clone(),
-                    tag.clone(),
-                )
-                .await?;
+                dist::remove_tag(channel_id.clone(), user_command.clone(), tag).await?;
             };
             anyhow::Ok(tag.clone())
         })
