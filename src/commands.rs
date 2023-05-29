@@ -9,18 +9,21 @@ use std::{str::SplitWhitespace, sync::Arc};
 use anyhow::Context;
 
 use crate::{
-    dist_target_map::{reader_folder, user_folders},
     post_message::MessagePoster,
-    query::dist,
+    query::{dist, fetch_user_folder},
     utils,
 };
+
+const PUBLIC_TAGS: &str = "public";
 
 pub async fn tag_list_command(
     cli: Arc<SlackHyperClient>,
     channel_id_command: SlackChannelId,
     user_id_command: SlackUserId,
 ) -> anyhow::Result<()> {
-    let (user_tags, public_tags) = reader_folder::fetch_tag_list(user_id_command.clone()).await?;
+    let user_tags = fetch_user_folder::tag_list_user(user_id_command.clone()).await?;
+    let public_tags = fetch_user_folder::tag_list_pub().await?;
+
     let tag_list_text =
         format!("タグのリストは以下です。\n user: {user_tags:#?}\n public: {public_tags:#?}");
     let _ = MessagePoster::new(channel_id_command, tag_list_text, cli)
@@ -39,12 +42,12 @@ pub async fn ch_list_command(
     let (tag, owner_id) = match first_arg {
         "--public" => {
             let tag = args_iter.next().context("argument error")?;
-            (tag, SlackUserId::new(user_folders::PUBLIC_TAGS.to_string()))
+            (tag, SlackUserId::new(PUBLIC_TAGS.to_string()))
         }
         tag => (tag, user_id_command.clone()),
     };
 
-    let ch_id_list = reader_folder::fetch_user_channel_list(tag, owner_id).await?;
+    let ch_id_list = fetch_user_folder::channel_list(tag, user_id_command.clone()).await?;
     let ch_name_list = ch_id_list
         .iter()
         .map(utils::channel_id_to_channel_name)

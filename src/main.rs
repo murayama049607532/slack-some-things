@@ -1,7 +1,6 @@
 #![warn(clippy::pedantic)]
 mod command_event_handler;
 mod commands;
-mod dist_target_map;
 mod post_message;
 mod process_message;
 mod push_event_handler;

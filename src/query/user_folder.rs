@@ -1,4 +1,5 @@
 use anyhow::Context;
+use rsb_derive::Builder;
 use slack_morphism::{SlackChannelId, SlackUserId};
 use sqlx::{FromRow, Pool, Sqlite, SqlitePool};
 
@@ -82,7 +83,7 @@ pub async fn retrieve_bot(
     let pool = SqlitePool::connect(DB_URL).await?;
     retrieve_bot_with_pool(tag_name, user, retrieve_bot, pool).await
 }
-pub async fn retrieve_bot_with_pool(
+async fn retrieve_bot_with_pool(
     tag_name: &str,
     user: SlackUserId,
     retrieve_bot: bool,
@@ -98,6 +99,37 @@ pub async fn retrieve_bot_with_pool(
     .execute(&pool)
     .await?;
     Ok(())
+}
+
+pub async fn is_valid_tag_for_user(user: &SlackUserId, tag_name: &str) -> anyhow::Result<bool> {
+    let pool = SqlitePool::connect(DB_URL).await?;
+    is_valid_tag_for_user_with_pool(user, tag_name, pool).await
+}
+
+async fn is_valid_tag_for_user_with_pool(
+    user: &SlackUserId,
+    tag_name: &str,
+    pool: Pool<Sqlite>,
+) -> anyhow::Result<bool> {
+    let user_str = user.to_string();
+
+    let is_valid = sqlx::query!(
+        "
+    SELECT EXISTS (
+        SELECT 1
+        FROM user_folder
+        WHERE owner_id = $1 AND tag_name = $2
+    ) AS is_exist
+    ",
+        user_str,
+        tag_name
+    )
+    .fetch_one(&pool)
+    .await?
+    .is_exist
+    .eq(&1);
+
+    Ok(is_valid)
 }
 
 #[cfg(test)]
@@ -191,6 +223,17 @@ mod tests {
 
         assert!(result_bot);
 
+        Ok(())
+    }
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_is_valid(pool: Pool<Sqlite>) -> anyhow::Result<()> {
+        let (tag_name, channel, user) = register_test(pool.clone()).await?;
+        let not_auth_user = SlackUserId::new("U000".to_string());
+
+        let is_valid = is_valid_tag_for_user_with_pool(&user, &tag_name, pool.clone()).await?;
+        let not_valid = is_valid_tag_for_user_with_pool(&not_auth_user, &tag_name, pool).await?;
+
+        assert!(is_valid);
         Ok(())
     }
 }

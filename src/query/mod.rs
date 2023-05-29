@@ -1,5 +1,7 @@
 pub mod create_table;
 pub mod dist;
+pub mod dist_target_map;
+pub mod fetch_user_folder;
 pub mod user_folder;
 pub mod utils;
 

@@ -9,7 +9,7 @@ use slack_morphism::{
     SlackApiTokenType, SlackChannelId, SlackUserId,
 };
 
-use crate::{dist_target_map::user_folders, post_message::MessagePoster, utils};
+use crate::{post_message::MessagePoster, utils};
 
 use super::set_target_tags::set_targets;
 
@@ -72,7 +72,7 @@ pub async fn create_command(
     let (channel_name, owner_id) = match first_arg {
         "--public" => (
             args_iter.next().context("argument error")?.to_string(),
-            SlackUserId::new(user_folders::PUBLIC_TAGS.to_string()),
+            SlackUserId::new(super::PUBLIC_TAGS.to_string()),
         ),
         channel => (channel.to_string(), user_id_command.clone()),
     };

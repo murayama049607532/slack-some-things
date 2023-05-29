@@ -1,14 +1,13 @@
 use std::{str::SplitWhitespace, sync::Arc};
 
 use anyhow::Context;
-use futures::{StreamExt, TryStreamExt};
+use futures::{future, StreamExt, TryStreamExt};
 
 use slack_morphism::{prelude::SlackHyperClient, SlackChannelId, SlackUserId};
 
 use crate::{
-    dist_target_map::{self, user_folders},
     post_message::MessagePoster,
-    query::{self, dist},
+    query::{self, dist, user_folder::is_valid_tag_for_user},
 };
 
 pub async fn set_targets(
@@ -17,18 +16,27 @@ pub async fn set_targets(
     tags: &[String],
     set: bool,
 ) -> anyhow::Result<Vec<String>> {
-    let user_folders = dist_target_map::operate_folder::load_user_folders_json().await?;
-    let auth_tags_iter = tags
-        .iter()
-        .filter(|tag| user_folders.is_valid(&user_command, tag));
+    let tags_stream = futures::stream::iter(tags);
 
-    let tags_stream = futures::stream::iter(auth_tags_iter);
+    let authed_tags = tags_stream
+        .map(|tag| async {
+            let is_valid = is_valid_tag_for_user(&user_command, tag).await?;
+            if is_valid {
+                anyhow::Ok(tag.clone())
+            } else {
+                Err(anyhow::anyhow!("the tag does not exist"))
+            }
+        })
+        .then(|s| s)
+        .try_collect::<Vec<_>>()
+        .await?;
 
-    let tags = tags_stream
+    let authed_tags_stream = futures::stream::iter(authed_tags.iter());
+
+    let tags = authed_tags_stream
         .map(|tag| async {
             if set {
                 dist::add_tag(channel_id.clone(), user_command.clone(), tag).await?;
-                //channel_dist::add_dists_json(channel_id.clone(), user_command.clone(), tag.clone())
             } else {
                 dist::remove_tag(channel_id.clone(), user_command.clone(), tag).await?;
             };
@@ -49,10 +57,7 @@ pub async fn set_command(
 ) -> anyhow::Result<()> {
     let first_arg = args_iter.next().context("argument error")?;
     let (head_tag, owner_id) = match first_arg {
-        "--public" => (
-            None,
-            SlackUserId::new(user_folders::PUBLIC_TAGS.to_string()),
-        ),
+        "--public" => (None, SlackUserId::new(super::PUBLIC_TAGS.to_string())),
         head_tag => (Some(head_tag), user_id_command.clone()),
     };
 
@@ -81,10 +86,7 @@ pub async fn unset_command(
 ) -> anyhow::Result<()> {
     let first_arg = args_iter.next().context("argument error")?;
     let (head_tag, owner_id) = match first_arg {
-        "--public" => (
-            None,
-            SlackUserId::new(user_folders::PUBLIC_TAGS.to_string()),
-        ),
+        "--public" => (None, SlackUserId::new(super::PUBLIC_TAGS.to_string())),
         head_tag => (Some(head_tag), user_id_command.clone()),
     };
 

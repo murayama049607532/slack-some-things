@@ -11,7 +11,6 @@ use slack_morphism::{
 use tokio_stream::StreamExt;
 
 use crate::{
-    dist_target_map::get_all_map,
     post_message::{self, SlackApiMessageRequest, SlackApiMessageResponse},
     process_message::{self, sender_profile::fetch_profile},
 };
