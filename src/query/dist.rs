@@ -63,8 +63,12 @@ async fn remove_tag_with_pool(
         .context("failed to fetch the tag")?;
 
     let _query = sqlx::query!(
-        "DELETE FROM dist WHERE user_id = $1 AND tag_id = $2",
+        "DELETE FROM dist WHERE user_id = $1 AND tag_id = $2;
+        UPDATE user_folder
+        SET valid_count = valid_count - 1
+        WHERE tag_id = $3",
         user_str,
+        tag_id,
         tag_id
     )
     .execute(&pool)

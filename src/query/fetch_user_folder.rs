@@ -34,7 +34,7 @@ pub async fn tag_list_pub() -> anyhow::Result<Vec<String>> {
     tag_list_public_with_pool(&pool).await
 }
 async fn tag_list_public_with_pool(pool: &Pool<Sqlite>) -> anyhow::Result<Vec<String>> {
-    let _tag_list = sqlx::query!(
+    let tag_list = sqlx::query!(
         "
     SELECT tag_name
     FROM user_folder
@@ -47,7 +47,7 @@ async fn tag_list_public_with_pool(pool: &Pool<Sqlite>) -> anyhow::Result<Vec<St
     .map(|r| r.tag_name)
     .collect::<Vec<_>>();
 
-    Ok(Vec::default())
+    Ok(tag_list)
 }
 
 pub async fn channel_list(tag: &str, owner_id: SlackUserId) -> anyhow::Result<Vec<SlackChannelId>> {
@@ -117,7 +117,7 @@ mod tests {
         let tag_name = "test_a";
 
         let ch_list = channel_list_with_pool(tag_name, owner_id, &pool).await?;
-        let res_ch_list_no_auth = channel_list_with_pool(tag_name, owner_id_2, &pool).await;
+        let ch_list_no_auth = channel_list_with_pool(tag_name, owner_id_2, &pool).await?;
         let ch_list_pub = channel_list_with_pool("test_pub", public, &pool).await?;
 
         let desired_ch_list = vec!["C01".to_string(), "C02".to_string()];
@@ -127,7 +127,7 @@ mod tests {
             .all(|s| ch_list.contains(&SlackChannelId::new(s.to_string())));
         let is_contain_pub = ch_list_pub.contains(&SlackChannelId::new("C03".to_string()));
 
-        assert!(res_ch_list_no_auth.is_err());
+        assert!(ch_list_no_auth.is_empty());
         assert!(is_contain);
         assert!(is_contain_pub);
 

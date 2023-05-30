@@ -45,7 +45,7 @@ INSERT INTO channel_list (tag_id, channel_id)
     SELECT tag_id, 'C01' FROM user_folder WHERE tag_name = 'test_target' AND owner_id = 'U00001';
 INSERT INTO channel_list (tag_id, channel_id)
     SELECT tag_id, 'C02' FROM user_folder WHERE tag_name = 'test_target' AND owner_id = 'U00001';
-INSERT INTO dist  (tag_id,user_id dist_channel_id)
+INSERT INTO dist  (tag_id,user_id, dist_channel_id)
     SELECT tag_id, 'U00001', 'Cdist' FROM user_folder WHERE tag_name = 'test_target' AND owner_id = 'U00001';
 
 
@@ -53,5 +53,13 @@ INSERT INTO dist  (tag_id,user_id dist_channel_id)
 INSERT INTO user_folder (tag_name, owner_id, bot) VALUES ("test_target_bot", "U00001", true);
 INSERT INTO channel_list (tag_id, channel_id)
     SELECT tag_id, 'C02' FROM user_folder WHERE tag_name = 'test_target_bot' AND owner_id = 'U00001';
-INSERT INTO dist  (tag_id,user_id dist_channel_id)
+INSERT INTO dist  (tag_id,user_id ,dist_channel_id)
     SELECT tag_id, 'U00001', 'Cdist_bot' FROM user_folder WHERE tag_name = 'test_target_bot' AND owner_id = 'U00001';
+
+
+UPDATE user_folder
+    SET valid_count = valid_count + 1
+    WHERE tag_name = 'test_target';
+UPDATE user_folder
+    SET valid_count = valid_count + 1
+    WHERE tag_name = 'test_target_bot';

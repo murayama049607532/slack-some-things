@@ -89,8 +89,6 @@ pub async fn target_to_dists_with_pool(
 #[cfg(test)]
 mod tests {
 
-    
-
     use slack_morphism::{SlackBotId, SlackUserId};
 
     use crate::utils::get_self_bot_id;
