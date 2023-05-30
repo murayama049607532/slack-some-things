@@ -1,13 +1,13 @@
 use std::{str::SplitWhitespace, sync::Arc};
 
 use anyhow::Context;
-use futures::{future, StreamExt, TryStreamExt};
+use futures::{StreamExt, TryStreamExt};
 
 use slack_morphism::{prelude::SlackHyperClient, SlackChannelId, SlackUserId};
 
 use crate::{
     post_message::MessagePoster,
-    query::{self, dist, user_folder::is_valid_tag_for_user},
+    query::{dist, user_folder::is_valid_tag_for_user},
 };
 
 pub async fn set_targets(

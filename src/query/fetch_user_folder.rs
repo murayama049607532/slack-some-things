@@ -34,7 +34,7 @@ pub async fn tag_list_pub() -> anyhow::Result<Vec<String>> {
     tag_list_public_with_pool(&pool).await
 }
 async fn tag_list_public_with_pool(pool: &Pool<Sqlite>) -> anyhow::Result<Vec<String>> {
-    let tag_list = sqlx::query!(
+    let _tag_list = sqlx::query!(
         "
     SELECT tag_name
     FROM user_folder
@@ -55,7 +55,7 @@ pub async fn channel_list(tag: &str, owner_id: SlackUserId) -> anyhow::Result<Ve
     channel_list_with_pool(tag, owner_id, &pool).await
 }
 async fn channel_list_with_pool(
-    tag: &str,
+    _tag: &str,
     owner_id: SlackUserId,
     pool: &Pool<Sqlite>,
 ) -> anyhow::Result<Vec<SlackChannelId>> {

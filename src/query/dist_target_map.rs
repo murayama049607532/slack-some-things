@@ -1,4 +1,4 @@
-use slack_morphism::{prelude::SlackMessageEvent, SlackChannelId, SlackMessageSender};
+use slack_morphism::{SlackChannelId, SlackMessageSender};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
 use super::DB_URL;
@@ -89,9 +89,9 @@ pub async fn target_to_dists_with_pool(
 #[cfg(test)]
 mod tests {
 
-    use std::env;
+    
 
-    use slack_morphism::{SlackBotId, SlackMessageOrigin, SlackTs, SlackUserId};
+    use slack_morphism::{SlackBotId, SlackUserId};
 
     use crate::utils::get_self_bot_id;
 
@@ -122,7 +122,7 @@ mod tests {
         );
         assert!(is_target_for_some_with_pool(channel_from_2, sender_bot, &pool).await?);
 
-        let bot_self_id = get_self_bot_id()?;
+        let _bot_self_id = get_self_bot_id()?;
         let bot_self = SlackBotId::new("B01234567".to_string());
         let sender_self = SlackMessageSender::new().with_bot_id(bot_self);
 

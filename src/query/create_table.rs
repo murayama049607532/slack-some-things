@@ -1,13 +1,6 @@
-use slack_morphism::{SlackChannelId, SlackUserId};
-use sqlx::{migrate::MigrateDatabase, FromRow, Pool, Row, Sqlite, SqlitePool};
+use sqlx::{Pool, Sqlite, SqlitePool};
 
 use super::DB_URL;
-
-#[derive(Clone, FromRow, Debug)]
-struct ChannelList {
-    tag_id: i64,
-    channel_id: String,
-}
 
 pub async fn create_tables() -> anyhow::Result<()> {
     let pool = SqlitePool::connect(DB_URL).await?;
@@ -56,20 +49,10 @@ pub async fn create_tables_with_pool(pool: Pool<Sqlite>) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn insert_user_folder(tag: String, owner_id: SlackUserId, bot: bool) -> anyhow::Result<()> {
-    let db = SqlitePool::connect(DB_URL).await?;
-
-    let _query = sqlx::query("INSERT INTO user_folder (tag_name, owner_id) VALUES ($1, $2);")
-        .bind(tag)
-        .bind(owner_id.to_string())
-        .execute(&db)
-        .await?;
-
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
+    use sqlx::Row;
+
     use super::*;
 
     async fn table_list(pool: Pool<Sqlite>) -> Vec<String> {

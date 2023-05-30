@@ -1,7 +1,5 @@
-use anyhow::Context;
-use rsb_derive::Builder;
 use slack_morphism::{SlackChannelId, SlackUserId};
-use sqlx::{FromRow, Pool, Sqlite, SqlitePool};
+use sqlx::{Pool, Sqlite, SqlitePool};
 
 use super::{utils, DB_URL};
 
@@ -44,7 +42,7 @@ pub async fn register_channel_with_pool(
 }
 pub async fn unregister_channel(
     tag_name: &str,
-    channel: SlackChannelId,
+    _channel: SlackChannelId,
     user: SlackUserId,
 ) -> anyhow::Result<()> {
     let pool = SqlitePool::connect(DB_URL).await?;
@@ -127,9 +125,7 @@ async fn is_valid_tag_for_user_with_pool(
 #[cfg(test)]
 mod tests {
     use slack_morphism::SlackUserId;
-    use sqlx::{Row, SqlitePool};
 
-    use super::super::DB_TEST_URL;
     use super::*;
 
     async fn register_test(
@@ -166,7 +162,7 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn test_unregister_channel(pool: Pool<Sqlite>) -> anyhow::Result<()> {
-        let (tag_name, channel, user) = register_test(pool.clone()).await?;
+        let (tag_name, _channel, user) = register_test(pool.clone()).await?;
 
         unregister_channel_with_url(&tag_name, user, pool.clone()).await?;
 
@@ -187,7 +183,7 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn test_retrieve_bot(pool: Pool<Sqlite>) -> anyhow::Result<()> {
-        let (tag_name, channel, user) = register_test(pool.clone()).await?;
+        let (tag_name, _channel, user) = register_test(pool.clone()).await?;
 
         let result_bot = sqlx::query!(
             "SELECT bot
@@ -219,11 +215,11 @@ mod tests {
     }
     #[sqlx::test(migrations = "./migrations")]
     async fn test_is_valid(pool: Pool<Sqlite>) -> anyhow::Result<()> {
-        let (tag_name, channel, user) = register_test(pool.clone()).await?;
+        let (tag_name, _channel, user) = register_test(pool.clone()).await?;
         let not_auth_user = SlackUserId::new("U000".to_string());
 
         let is_valid = is_valid_tag_for_user_with_pool(&user, &tag_name, pool.clone()).await?;
-        let not_valid = is_valid_tag_for_user_with_pool(&not_auth_user, &tag_name, pool).await?;
+        let _not_valid = is_valid_tag_for_user_with_pool(&not_auth_user, &tag_name, pool).await?;
 
         assert!(is_valid);
         Ok(())

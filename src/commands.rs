@@ -39,7 +39,7 @@ pub async fn ch_list_command(
     mut args_iter: SplitWhitespace<'_>,
 ) -> anyhow::Result<()> {
     let first_arg = args_iter.next().context("argument error")?;
-    let (tag, owner_id) = match first_arg {
+    let (tag, _owner_id) = match first_arg {
         "--public" => {
             let tag = args_iter.next().context("argument error")?;
             (tag, SlackUserId::new(PUBLIC_TAGS.to_string()))

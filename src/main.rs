@@ -46,7 +46,9 @@ fn error_handler(
 async fn main() -> anyhow::Result<()> {
     if !Sqlite::database_exists(DB_URL).await? {
         Sqlite::create_database(DB_URL);
+        query::create_table::create_tables().await?;
     }
+
     socket_mode_process().await?;
 
     Ok(())

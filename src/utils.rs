@@ -4,8 +4,7 @@ use regex::Regex;
 use slack_morphism::{
     SlackApiToken, SlackApiTokenType, SlackApiTokenValue, SlackBotId, SlackChannelId,
 };
-use std::{env, path::Path};
-use tokio::{fs::OpenOptions, io::AsyncWriteExt};
+use std::env;
 
 pub fn get_token(token_type: &SlackApiTokenType) -> anyhow::Result<SlackApiToken> {
     dotenv().ok();
@@ -23,24 +22,6 @@ pub fn get_self_bot_id() -> anyhow::Result<SlackBotId> {
     dotenv().ok();
     let bot_id = env::var("SLACK_BOT_ID").context("bot id is missing")?;
     Ok(SlackBotId(bot_id))
-}
-
-pub async fn update_json(json_path: &Path, content: String) -> anyhow::Result<()> {
-    let backup_filename = format!(
-        "backup_{}",
-        json_path.file_stem().unwrap().to_str().unwrap()
-    );
-    let backup_path = Path::new(&backup_filename);
-    let mut backup_file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(backup_path)
-        .await?;
-    backup_file.write_all(content.as_bytes()).await?;
-
-    tokio::fs::rename(backup_path, json_path).await?;
-    Ok(())
 }
 
 pub fn channel_preprocess(channel: &str) -> anyhow::Result<SlackChannelId> {

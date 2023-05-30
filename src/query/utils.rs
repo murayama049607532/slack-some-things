@@ -1,7 +1,5 @@
 use slack_morphism::SlackUserId;
-use sqlx::{Pool, Sqlite, SqlitePool};
-
-use super::DB_URL;
+use sqlx::{Pool, Sqlite};
 
 pub async fn fetch_tag_id_with_pool(
     owner_id: SlackUserId,
@@ -26,25 +24,9 @@ pub async fn fetch_tag_id_with_pool(
     Ok(tag_id)
 }
 
-pub async fn fetch_tag_name_with_pool(tag_id: i64, pool: &Pool<Sqlite>) -> anyhow::Result<String> {
-    let tag_name = sqlx::query!(
-        "
-    SELECT tag_name
-    FROM user_folder
-    WHERE tag_id = $1 
-    ",
-        tag_id
-    )
-    .fetch_one(pool)
-    .await?
-    .tag_name;
-
-    Ok(tag_name)
-}
-
 #[cfg(test)]
 mod tests {
-    use slack_morphism::SlackChannelId;
+
     use sqlx::Pool;
 
     use super::*;
@@ -85,28 +67,6 @@ mod tests {
         .tag_id;
 
         assert_eq!(tag_id_fetch, tag_id);
-
-        Ok(())
-    }
-
-    #[sqlx::test(migrations = "./migrations")]
-    async fn fetch_tag_name_test(pool: Pool<Sqlite>) -> anyhow::Result<()> {
-        let (tag_name, owner_id) = test_data(pool.clone()).await?;
-
-        let tag_id_fetch = sqlx::query!(
-            "
-        SELECT tag_id
-        FROM user_folder
-        WHERE tag_name = 'test' AND owner_id = 'U0987654'
-        "
-        )
-        .fetch_one(&pool)
-        .await?
-        .tag_id;
-
-        let tag_name_test = fetch_tag_name_with_pool(tag_id_fetch, &pool).await?;
-
-        assert_eq!(tag_name, tag_name_test);
 
         Ok(())
     }
