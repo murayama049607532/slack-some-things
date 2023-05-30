@@ -13,6 +13,7 @@ use tokio_stream::StreamExt;
 use crate::{
     post_message::{self, SlackApiMessageRequest, SlackApiMessageResponse},
     process_message::{self, sender_profile::fetch_profile},
+    query::dist_target_map,
 };
 
 pub async fn push_event_handler(
@@ -28,14 +29,16 @@ pub async fn push_event_handler(
                 .origin
                 .channel
                 .context("cannot get channel id")?;
-            let dist_target_map = get_all_map().await?;
-            let is_target = dist_target_map.is_target(msg_event.clone())?;
+            let sender = msg_event.clone().sender;
+
+            let is_target =
+                dist_target_map::is_target_for_some(channel_id_from.clone(), sender.clone())
+                    .await?;
             if !is_target {
                 return Ok(());
             }
 
-            let dists = dist_target_map.target_to_dists(&channel_id_from);
-            let sender = msg_event.clone().sender;
+            let dists = dist_target_map::target_to_dists(channel_id_from, sender.clone()).await?;
 
             let sender_profile = fetch_profile(cli.clone(), sender).await?;
 

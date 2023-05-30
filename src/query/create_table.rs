@@ -34,6 +34,8 @@ pub async fn create_tables_with_pool(pool: Pool<Sqlite>) -> anyhow::Result<()> {
         tag_name TEXT NOT NULL,
         owner_id TEXT NOT NULL,
         bot BOOLEAN NOT NULL DEFAULT false,
+        valid_count INTEGER NOT NULL DEFAULT 0,
+
         UNIQUE (tag_name, owner_id)
     );",
     )

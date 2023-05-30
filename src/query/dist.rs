@@ -41,10 +41,15 @@ async fn add_tag_with_pool(
         .context("failed to fetch the tag")?;
 
     let _query = sqlx::query!(
-        "INSERT INTO dist (user_id,tag_id, dist_channel_id) VALUES ($1, $2, $3);",
+        "INSERT INTO dist (user_id,tag_id, dist_channel_id) VALUES ($1, $2, $3);
+        UPDATE user_folder
+        SET valid_count = valid_count + 1
+        WHERE tag_id = $4
+        ",
         user_str,
         tag_id,
-        dist_str
+        dist_str,
+        tag_id
     )
     .execute(&pool)
     .await?;

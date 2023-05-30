@@ -5,14 +5,6 @@ use sqlx::{FromRow, Pool, Sqlite, SqlitePool};
 
 use super::{utils, DB_URL};
 
-#[derive(Clone, FromRow, Debug)]
-struct UserFolder {
-    tag_id: i64,
-    owner_id: String,
-    tag_name: String,
-    bot: bool,
-}
-
 // register channel to tag
 pub async fn register_channel(
     tag_name: &str,

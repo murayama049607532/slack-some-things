@@ -18,7 +18,6 @@ pub struct SenderProfile {
     pub name: String,
 }
 
-// should be refactor
 pub async fn fetch_profile(
     cli: Arc<SlackHyperClient>,
     sender: SlackMessageSender,
