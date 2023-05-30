@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use slack_morphism::{SlackChannelId, SlackMessageSender};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
@@ -49,7 +51,7 @@ async fn is_target_for_some_with_pool(
 pub async fn target_to_dists(
     target: SlackChannelId,
     sender: SlackMessageSender,
-) -> anyhow::Result<Vec<SlackChannelId>> {
+) -> anyhow::Result<HashSet<SlackChannelId>> {
     let pool = SqlitePool::connect(DB_URL).await?;
     target_to_dists_with_pool(target, sender, &pool).await
 }
@@ -57,7 +59,7 @@ pub async fn target_to_dists_with_pool(
     target: SlackChannelId,
     sender: SlackMessageSender,
     pool: &Pool<Sqlite>,
-) -> anyhow::Result<Vec<SlackChannelId>> {
+) -> anyhow::Result<HashSet<SlackChannelId>> {
     let channel_str = target.to_string();
 
     let is_bot = sender.bot_id.is_some();
@@ -81,7 +83,7 @@ pub async fn target_to_dists_with_pool(
     .into_iter()
     .filter(|r| !is_bot || r.bot)
     .map(|r| SlackChannelId::new(r.dist_channel_id))
-    .collect::<Vec<_>>();
+    .collect::<HashSet<_>>();
 
     Ok(dists)
 }

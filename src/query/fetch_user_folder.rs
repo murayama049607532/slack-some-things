@@ -55,7 +55,7 @@ pub async fn channel_list(tag: &str, owner_id: SlackUserId) -> anyhow::Result<Ve
     channel_list_with_pool(tag, owner_id, &pool).await
 }
 async fn channel_list_with_pool(
-    _tag: &str,
+    tag: &str,
     owner_id: SlackUserId,
     pool: &Pool<Sqlite>,
 ) -> anyhow::Result<Vec<SlackChannelId>> {
@@ -64,13 +64,11 @@ async fn channel_list_with_pool(
     let ch_list = sqlx::query!(
         "
     SELECT channel_id
-    FROM channel_list cl
-    WHERE EXISTS (
-        SELECT *
-        FROM user_folder uf
-        WHERE uf.owner_id = $1 AND uf.tag_id = cl.tag_id
-    )",
-        owner_id_str
+    FROM channel_list cl INNER JOIN user_folder uf
+    ON cl.tag_id = uf.tag_id
+    WHERE uf.owner_id = $1 AND uf.tag_name = $2",
+        owner_id_str,
+        tag
     )
     .fetch_all(pool)
     .await?

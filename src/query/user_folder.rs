@@ -19,8 +19,13 @@ pub async fn register_channel_with_pool(
     pool: Pool<Sqlite>,
 ) -> anyhow::Result<()> {
     let owner_id = user.to_string();
+
     let _query_uf = sqlx::query!(
-        "INSERT INTO user_folder (tag_name, owner_id) VALUES ($1, $2);",
+        "
+        INSERT INTO user_folder (tag_name, owner_id) VALUES ($1, $2)
+        ON CONFLICT (tag_name, owner_id)
+        DO NOTHING
+        ;",
         tag_name,
         owner_id
     )
@@ -31,7 +36,9 @@ pub async fn register_channel_with_pool(
 
     let channel_id = channel.to_string();
     let _query_cl = sqlx::query!(
-        "INSERT INTO channel_list (channel_id, tag_id) VALUES ($1,$2);",
+        "INSERT INTO channel_list (channel_id, tag_id) VALUES ($1,$2)
+        ON CONFLICT (channel_id, tag_id)
+        DO NOTHING;",
         channel_id,
         tag_id
     )
