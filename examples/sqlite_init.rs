@@ -5,7 +5,7 @@ pub const DB_URL: &str = "sqlite://sqlite.db";
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     if !Sqlite::database_exists(DB_URL).await? {
-        Sqlite::create_database(DB_URL);
+        Sqlite::create_database(DB_URL).await?;
         create_table::_create_tables().await?;
     }
 
