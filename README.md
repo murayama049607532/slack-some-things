@@ -7,7 +7,8 @@ Channel Bugyo（仮）は、カスタマイズ可能なチャンネルメッセ�
 アプリの権限設定については、manifest.yml を参照してください。
 
 ## 環境変数設定
-.env ファイルを用意し、SlackApp用トークンと、ボットのID、Sqlite用データベース名を環境変数として設定してください。
+.env ファイルを用意し、SlackApp用トークンと、ボットのIDを環境変数として設定してください。また、データベースURLを以下のように設定してください。（現在のところ、ハードコーディングされているため、別名での登録では動きません。） \
+
 ```
 SLACK_APP_TOKEN=xapp-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 SLACK_BOT_TOKEN=xoxb-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -17,6 +18,7 @@ SLACK_BOT_ID=BXXXXXXXX
 
 DATABASE_URL=sqlite://sqlite.db
 ```
+本プログラムでは、sqlx の query! 関数を使用しているため、コンパイル時にデータベースとテーブルが存在している必要があります。examples/sqlite_init.rs を実行することで、本プログラムで用いられるデータベースとテーブルの初期設定が行われます。
 
 ## 機能
 

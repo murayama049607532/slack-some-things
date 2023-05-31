@@ -2,12 +2,12 @@ use sqlx::{Pool, Sqlite, SqlitePool};
 
 use super::DB_URL;
 
-pub async fn create_tables() -> anyhow::Result<()> {
+pub async fn _create_tables() -> anyhow::Result<()> {
     let pool = SqlitePool::connect(DB_URL).await?;
-    create_tables_with_pool(pool).await
+    _create_tables_with_pool(pool).await
 }
 
-pub async fn create_tables_with_pool(pool: Pool<Sqlite>) -> anyhow::Result<()> {
+pub async fn _create_tables_with_pool(pool: Pool<Sqlite>) -> anyhow::Result<()> {
     let _dist = sqlx::query!(
         "CREATE TABLE IF NOT EXISTS dist 
     (
@@ -73,7 +73,7 @@ mod tests {
 
     #[sqlx::test]
     async fn create_test(pool: Pool<Sqlite>) {
-        create_tables_with_pool(pool.clone()).await.unwrap();
+        _create_tables_with_pool(pool.clone()).await.unwrap();
         let list = table_list(pool).await;
 
         let desired_tables = vec!["dist", "user_folder", "channel_list"]

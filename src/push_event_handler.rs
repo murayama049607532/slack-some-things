@@ -21,7 +21,6 @@ pub async fn push_event_handler(
     cli: Arc<SlackHyperClient>,
     _state: SlackClientEventsUserState,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    //println!("{event:#?}");
     match event.event {
         Message(msg_event) => {
             let channel_id_from = msg_event
