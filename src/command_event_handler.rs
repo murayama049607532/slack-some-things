@@ -47,7 +47,6 @@ pub async fn command_event_handler(
     cli: Arc<SlackHyperClient>,
     _state: SlackClientEventsUserState,
 ) -> anyhow::Result<()> {
-    println!("{event:#?}");
     let channel_id_command = event.channel_id.clone();
     let user_id_command = event.user_id;
 

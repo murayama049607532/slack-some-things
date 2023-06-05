@@ -75,7 +75,6 @@ pub async fn push_event_handler(
                 .then(|s| s)
                 .collect::<Vec<_>>()
                 .await;
-            println!("{ress:#?}");
         }
         MemberJoinedChannel(_join_event) => {}
         MemberLeftChannel(_left_event) => {}

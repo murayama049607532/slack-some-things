@@ -25,7 +25,6 @@ pub async fn fetch_profile(
     match sender.user {
         Some(user_id) => {
             let user_profile = fetch_user_profile(cli, user_id).await?;
-            println!("{user_profile:#?}");
             let user_icon = user_profile.get_icon_url()?;
             let user_name = user_profile.get_display_name()?;
             Ok(SenderProfile {
