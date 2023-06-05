@@ -1,7 +1,7 @@
 use slack_morphism::{SlackChannelId, SlackUserId};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use super::{utils, DB_URL};
+use super::utils;
 
 // register channel to tag
 pub async fn register_channel(
@@ -9,7 +9,8 @@ pub async fn register_channel(
     channel: SlackChannelId,
     user: SlackUserId,
 ) -> anyhow::Result<()> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     register_channel_with_pool(tag_name, channel, user, pool).await
 }
 pub async fn register_channel_with_pool(
@@ -52,7 +53,8 @@ pub async fn unregister_channel(
     _channel: SlackChannelId,
     user: SlackUserId,
 ) -> anyhow::Result<()> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     unregister_channel_with_url(tag_name, user, pool).await
 }
 
@@ -77,7 +79,8 @@ pub async fn retrieve_bot(
     user: SlackUserId,
     retrieve_bot: bool,
 ) -> anyhow::Result<()> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     retrieve_bot_with_pool(tag_name, user, retrieve_bot, pool).await
 }
 async fn retrieve_bot_with_pool(
@@ -99,7 +102,8 @@ async fn retrieve_bot_with_pool(
 }
 
 pub async fn is_valid_tag_for_user(user: &SlackUserId, tag_name: &str) -> anyhow::Result<bool> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     is_valid_tag_for_user_with_pool(user, tag_name, pool).await
 }
 

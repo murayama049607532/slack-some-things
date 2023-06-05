@@ -1,10 +1,9 @@
 use slack_morphism::{SlackChannelId, SlackUserId};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use super::DB_URL;
-
 pub async fn tag_list_user(owner_id: SlackUserId) -> anyhow::Result<Vec<String>> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     tag_list_user_with_pool(owner_id, &pool).await
 }
 async fn tag_list_user_with_pool(
@@ -30,7 +29,8 @@ async fn tag_list_user_with_pool(
     Ok(tag_list)
 }
 pub async fn tag_list_pub() -> anyhow::Result<Vec<String>> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     tag_list_public_with_pool(&pool).await
 }
 async fn tag_list_public_with_pool(pool: &Pool<Sqlite>) -> anyhow::Result<Vec<String>> {
@@ -51,7 +51,8 @@ async fn tag_list_public_with_pool(pool: &Pool<Sqlite>) -> anyhow::Result<Vec<St
 }
 
 pub async fn channel_list(tag: &str, owner_id: SlackUserId) -> anyhow::Result<Vec<SlackChannelId>> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     channel_list_with_pool(tag, owner_id, &pool).await
 }
 async fn channel_list_with_pool(

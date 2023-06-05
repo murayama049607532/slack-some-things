@@ -1,9 +1,8 @@
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use super::DB_URL;
-
 pub async fn _create_tables() -> anyhow::Result<()> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     _create_tables_with_pool(pool).await
 }
 

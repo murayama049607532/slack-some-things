@@ -3,14 +3,13 @@ use std::collections::HashSet;
 use slack_morphism::{SlackChannelId, SlackMessageSender};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use super::DB_URL;
-
 // Determine if the channel is a collection target
 pub async fn is_target_for_some(
     channel_from: SlackChannelId,
     sender: SlackMessageSender,
 ) -> anyhow::Result<bool> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     is_target_for_some_with_pool(channel_from, sender, &pool).await
 }
 async fn is_target_for_some_with_pool(
@@ -52,7 +51,8 @@ pub async fn target_to_dists(
     target: SlackChannelId,
     sender: SlackMessageSender,
 ) -> anyhow::Result<HashSet<SlackChannelId>> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     target_to_dists_with_pool(target, sender, &pool).await
 }
 pub async fn target_to_dists_with_pool(

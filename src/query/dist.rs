@@ -2,10 +2,7 @@ use anyhow::Context;
 use slack_morphism::{SlackChannelId, SlackUserId};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use super::{
-    utils::{self},
-    DB_URL,
-};
+use super::utils::{self};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TagOwner {
@@ -14,7 +11,8 @@ pub struct TagOwner {
 }
 
 pub async fn add_tag(dist: SlackChannelId, user: SlackUserId, tag: &str) -> anyhow::Result<()> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     add_tag_with_pool(dist, user, tag, pool).await
 }
 async fn add_tag_with_pool(
@@ -47,7 +45,8 @@ async fn add_tag_with_pool(
     Ok(())
 }
 pub async fn remove_tag(dist: SlackChannelId, user: SlackUserId, tag: &str) -> anyhow::Result<()> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     remove_tag_with_pool(dist, user, tag, pool).await
 }
 async fn remove_tag_with_pool(
@@ -78,7 +77,8 @@ async fn remove_tag_with_pool(
 }
 
 pub async fn target_list(dist: &SlackChannelId) -> anyhow::Result<Vec<String>> {
-    let pool = SqlitePool::connect(DB_URL).await?;
+    let db_url = super::db_url()?;
+    let pool = SqlitePool::connect(&db_url).await?;
     target_list_with_pool(dist, pool).await
 }
 
