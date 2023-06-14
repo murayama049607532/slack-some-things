@@ -7,7 +7,7 @@ Channel Bugyo は、カスタマイズ可能なチャンネルメッセージ集
 アプリの権限設定については、manifest.yml を参照してください。
 
 ## 環境変数設定
-.env ファイルを用意し、SlackApp用トークンと、ボットのID、Sqlite用のデータベースURLを環境変数として設定してください。 \
+.env ファイルを用意し、SlackApp用トークンと、ボットのID、Sqlite用のデータベースURLを環境変数として設定してください。
 
 ```
 SLACK_APP_TOKEN=xapp-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -25,7 +25,7 @@ DATABASE_URL=sqlite://sqlite.db
 ### タグ
 
 Channel Bugyo では、複数の収集対象チャンネルを「タグ」としてまとめ、収集先チャンネルにタグをセットすることではじめてメッセージの収集を開始します。 \
-タグは収集対象のチャンネルリスト、タグの所有者、ボットによるメッセージを収集対象とするかについて情報を持ちます。 \
+タグは収集対象のチャンネルリスト、タグの所有者、ボットによるメッセージを収集対象とするかについて情報を持ちます。
 
 
 #### add
